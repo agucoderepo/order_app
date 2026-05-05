@@ -38,7 +38,7 @@ export default function Sidebar({ page, setPage, user, onLogout }: Props) {
           OrderApp
         </div>
         <div style={{ fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--accent)', letterSpacing: '.15em', textTransform: 'uppercase' }}>
-          admin panel
+          {user ? `${user.role.charAt(0).toUpperCase() + user.role.slice(1)} Panel` : ''}
         </div>
       </div>
 
