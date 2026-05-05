@@ -3,12 +3,12 @@ import type { User, UserCreate, UserUpdate } from '../types';
 
 export const usersApi = {
   list: async (): Promise<User[]> => {
-    const res = await apiClient.get<User[]>('/users');
+    const res = await apiClient.get<User[]>('/users/');
     return res.data;
   },
 
   create: async (data: UserCreate): Promise<User> => {
-    const res = await apiClient.post<User>('/users', data);
+    const res = await apiClient.post<User>('/users/', data);
     return res.data;
   },
 
