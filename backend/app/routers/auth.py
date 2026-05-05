@@ -55,10 +55,18 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered",
         )
+    try:
+        password_hash = pwd_context.hash(payload.password)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password is too long for bcrypt (maximum 72 bytes in UTF-8).",
+        ) from exc
+
     user = User(
         name=payload.name,
         email=payload.email,
-        password_hash=pwd_context.hash(payload.password),
+        password_hash=password_hash,
         role=payload.role,
     )
     db.add(user)
@@ -83,7 +91,15 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
-    if not pwd_context.verify(payload.password, user.password_hash):
+    try:
+        password_matches = pwd_context.verify(payload.password, user.password_hash)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password is too long for bcrypt (maximum 72 bytes in UTF-8).",
+        ) from exc
+
+    if not password_matches:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",

@@ -25,6 +25,14 @@ class RegisterRequest(BaseModel):
         if v not in allowed:
             raise ValueError(f"role must be one of {allowed}")
         return v
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_utf8_bytes(cls, v: str) -> str:
+        # bcrypt only supports passwords up to 72 bytes.
+        if len(v.encode("utf-8")) > 72:
+            raise ValueError("password must be at most 72 bytes in UTF-8")
+        return v
  
  
 class TokenResponse(BaseModel):
