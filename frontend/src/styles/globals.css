@@ -1,0 +1,118 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0e0f11;
+  --surface:   #16181c;
+  --surface2:  #1c1f24;
+  --border:    #2a2d35;
+  --accent:    #c8f04a;
+  --accent2:   #4af0c8;
+  --danger:    #f04a6a;
+  --warning:   #f0b84a;
+  --text:      #e8e9eb;
+  --muted:     #6b7080;
+  --radius:    10px;
+  --mono:      'DM Mono', monospace;
+  --sans:      'Syne', sans-serif;
+}
+
+html, body, #root {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* ── Form elements ── */
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.field label {
+  font-size: 11px; font-family: var(--mono); color: var(--muted);
+  letter-spacing: .08em; text-transform: uppercase;
+}
+.field input, .field select {
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 10px 14px; color: var(--text); font-family: var(--sans); font-size: 14px;
+  outline: none; transition: border-color .15s; width: 100%;
+}
+.field input:focus, .field select:focus { border-color: var(--accent); }
+.field select option { background: var(--bg); }
+.field input::placeholder { color: var(--muted); }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 10px 18px; border-radius: var(--radius); border: none; cursor: pointer;
+  font-family: var(--sans); font-size: 13px; font-weight: 600;
+  transition: opacity .15s, transform .1s; user-select: none; text-decoration: none;
+}
+.btn:active:not(:disabled) { transform: scale(.97); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+
+.btn-primary {
+  background: var(--accent); color: #0e0f11;
+}
+.btn-primary:hover:not(:disabled) { opacity: .88; }
+
+.btn-ghost {
+  background: transparent; color: var(--muted); border: 1px solid var(--border);
+}
+.btn-ghost:hover:not(:disabled) { color: var(--text); border-color: var(--muted); }
+
+.btn-danger {
+  background: transparent; color: var(--danger); border: 1px solid var(--danger);
+}
+.btn-danger:hover:not(:disabled) { background: rgba(240,74,106,.1); }
+
+.btn-sm { padding: 6px 13px; font-size: 12px; border-radius: 7px; }
+.btn-full { width: 100%; padding: 12px; font-size: 14px; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 20px;
+  font-size: 11px; font-family: var(--mono); font-weight: 500;
+}
+.badge .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.badge-admin    { background: rgba(200,240,74,.12); color: var(--accent);  border: 1px solid rgba(200,240,74,.25); }
+.badge-operator { background: rgba(74,240,200,.10); color: var(--accent2); border: 1px solid rgba(74,240,200,.22); }
+.badge-active   { background: rgba(74,240,200,.10); color: var(--accent2); border: 1px solid rgba(74,240,200,.22); }
+.badge-inactive { background: rgba(240,74,106,.10); color: var(--danger);  border: 1px solid rgba(240,74,106,.22); }
+
+/* ── Spinner ── */
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,.1); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin .6s linear infinite; display: inline-block;
+}
+
+/* ── Toggle ── */
+.toggle-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.toggle {
+  width: 36px; height: 20px; background: var(--border); border-radius: 20px;
+  position: relative; cursor: pointer; transition: background .2s;
+  border: none; padding: 0; flex-shrink: 0;
+}
+.toggle.on { background: var(--accent); }
+.toggle::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 14px; height: 14px; border-radius: 50%; background: #fff;
+  transition: transform .2s;
+}
+.toggle.on::after { transform: translateX(16px); }
+.toggle-label { font-size: 13px; color: var(--muted); }
+
+/* ── Animations ── */
+@keyframes spin    { to { transform: rotate(360deg); } }
+@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* ── Error text ── */
+.error-text { color: var(--danger); font-size: 13px; margin-bottom: 12px; }
