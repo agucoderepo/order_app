@@ -9,21 +9,23 @@ import Clients from './pages/Clients.tsx';
 import Providers from './pages/Providers.tsx';
 import Products from './pages/Products.tsx';
 import Orders from './pages/Orders.tsx';
+import ShoppingLists from './pages/ShoppingLists.tsx';
 import './styles/globals.css';
 
-type Page = 'dashboard' | 'users' | 'clients' | 'providers' | 'products' | 'orders';
+type Page = 'dashboard' | 'users' | 'clients' | 'providers' | 'products' | 'orders' | 'shopping-lists';
 
 const PAGE_META: Record<Page, { title: string; sub: string }> = {
-  dashboard: { title: 'Dashboard',          sub: 'Overview and quick access' },
-  users:     { title: 'User management',    sub: 'Create, edit and deactivate accounts' },
-  clients:   { title: 'Client management',  sub: 'Create, edit and deactivate clients' },
-  providers: { title: 'Provider management', sub: 'Create, edit and deactivate providers' },
-  products:  { title: 'Product management', sub: 'Create, edit and manage product catalog' },
-  orders:    { title: 'Orders',             sub: 'Create and manage customer orders' },
+  dashboard:       { title: 'Dashboard',          sub: 'Overview and quick access' },
+  users:           { title: 'User management',    sub: 'Create, edit and deactivate accounts' },
+  clients:         { title: 'Client management',  sub: 'Create, edit and deactivate clients' },
+  providers:       { title: 'Provider management', sub: 'Create, edit and deactivate providers' },
+  products:        { title: 'Product management', sub: 'Create, edit and manage product catalog' },
+  orders:          { title: 'Orders',             sub: 'Create and manage customer orders' },
+  'shopping-lists': { title: 'Shopping lists',    sub: 'Aggregate confirmed orders and prepare daily procurement' },
 };
 
 function isPage(value: string): value is Page {
-  return ['dashboard', 'users', 'clients', 'providers', 'products', 'orders'].includes(value);
+  return ['dashboard', 'users', 'clients', 'providers', 'products', 'orders', 'shopping-lists'].includes(value);
 }
 
 export default function App() {
@@ -79,7 +81,8 @@ export default function App() {
             {safePage === 'clients'   && <Clients toast={toast} />}
             {safePage === 'providers' && <Providers toast={toast} />}
             {safePage === 'products'  && <Products toast={toast} />}
-            {safePage === 'orders'    && <Orders toast={toast} />}
+            {safePage === 'orders'         && <Orders toast={toast} />}
+            {safePage === 'shopping-lists' && <ShoppingLists toast={toast} />}
           </div>
         </div>
       </div>

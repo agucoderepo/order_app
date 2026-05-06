@@ -214,6 +214,41 @@ export interface OrderRead {
   updated_at: string;
 }
 
+// ─── Shopping Lists ──────────────────────────────────────────────────────────
+
+export type ShoppingListStatus = 'open' | 'finalized';
+
+export interface ShoppingListItemRead {
+  id: string;
+  product: ProductSummary;
+  provider: ProviderSummary;
+  total_quantity: string;
+  adjusted_quantity: string | null;
+  final_quantity: string;
+  notes: string | null;
+}
+
+export interface ProviderGroup {
+  provider: ProviderSummary;
+  items: ShoppingListItemRead[];
+  subtotal: string;
+}
+
+export interface ShoppingListRead {
+  id: string;
+  list_date: string;
+  status: ShoppingListStatus;
+  created_by: string;
+  finalized_at: string | null;
+  created_at: string;
+  by_provider: ProviderGroup[];
+}
+
+export interface ShoppingListItemAdjust {
+  adjusted_quantity?: number | null;
+  notes?: string | null;
+}
+
 // ─── API errors ──────────────────────────────────────────────────────────────
   
   export interface ApiError {
