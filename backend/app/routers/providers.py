@@ -35,6 +35,7 @@ def create_provider(
 ):
     row = Provider(
         name=payload.name,
+        address=payload.address,
         contact_name=payload.contact_name,
         phone=payload.phone,
         notes=payload.notes,

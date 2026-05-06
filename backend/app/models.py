@@ -189,6 +189,7 @@ class Client(Base):
 
     id         = Column(UUID, primary_key=True, default=new_uuid)
     name       = Column(String(255), nullable=False)
+    address    = Column(String(255), nullable=True)
     phone      = Column(String(50), nullable=True)
     notes      = Column(Text, nullable=True)
     is_active  = Column(Boolean, nullable=False, default=True)
@@ -218,6 +219,7 @@ class Provider(Base):
 
     id           = Column(UUID, primary_key=True, default=new_uuid)
     name         = Column(String(255), nullable=False)
+    address      = Column(String(255), nullable=True)
     contact_name = Column(String(255), nullable=True)
     phone        = Column(String(50), nullable=True)
     notes        = Column(Text, nullable=True)

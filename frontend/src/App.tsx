@@ -5,14 +5,20 @@ import Toast from './components/Toast';
 import Login from './pages/Login.tsx';
 import Dashboard from './pages/Dashboard.tsx';
 import Users from './pages/Users.tsx';
+import Clients from './pages/Clients.tsx';
 import './styles/globals.css';
 
-type Page = 'dashboard' | 'users';
+type Page = 'dashboard' | 'users' | 'clients';
 
 const PAGE_META: Record<Page, { title: string; sub: string }> = {
   dashboard: { title: 'Dashboard',        sub: 'Overview and quick access' },
   users:     { title: 'User management',  sub: 'Create, edit and deactivate accounts' },
+  clients:   { title: 'Client management', sub: 'Create, edit and deactivate clients' },
 };
+
+function isPage(value: string): value is Page {
+  return value === 'dashboard' || value === 'users' || value === 'clients';
+}
 
 export default function App() {
   const { user, authed, loading, login, logout } = useAuth();
@@ -37,12 +43,18 @@ export default function App() {
     );
   }
 
-  const meta = PAGE_META[page];
+  const safePage: Page = isPage(page) ? page : 'dashboard';
+  const meta = PAGE_META[safePage];
 
   return (
     <>
       <div style={{ display: 'flex', minHeight: '100vh' }}>
-        <Sidebar page={page} setPage={(p) => setPage(p as Page)} user={user} onLogout={logout} />
+        <Sidebar
+          page={safePage}
+          setPage={(p) => setPage(isPage(p) ? p : 'dashboard')}
+          user={user}
+          onLogout={logout}
+        />
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh', overflow: 'auto' }}>
           {/* Topbar */}
@@ -56,8 +68,9 @@ export default function App() {
 
           {/* Page content */}
           <div style={{ padding: '28px 32px', flex: 1 }}>
-            {page === 'dashboard' && <Dashboard user={user} />}
-            {page === 'users'     && <Users currentUser={user} toast={toast} />}
+            {safePage === 'dashboard' && <Dashboard user={user} />}
+            {safePage === 'users'     && <Users currentUser={user} toast={toast} />}
+            {safePage === 'clients'   && <Clients toast={toast} />}
           </div>
         </div>
       </div>

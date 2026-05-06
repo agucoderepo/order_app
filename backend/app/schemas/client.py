@@ -10,6 +10,7 @@ from app.schemas import TimestampMixin
 
 class ClientBase(BaseModel):
     name: str = Field(min_length=1, max_length=255)
+    address: Optional[str] = Field(default=None, max_length=255)
     phone: Optional[str] = Field(default=None, max_length=50)
     notes: Optional[str] = None
  
@@ -20,6 +21,7 @@ class ClientCreate(ClientBase):
  
 class ClientUpdate(BaseModel):
     name: Optional[str] = Field(default=None, min_length=1, max_length=255)
+    address: Optional[str] = Field(default=None, max_length=255)
     phone: Optional[str] = Field(default=None, max_length=50)
     notes: Optional[str] = None
     is_active: Optional[bool] = None

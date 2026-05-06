@@ -41,6 +41,35 @@ export interface TokenResponse {
     password?: string;
     is_active?: boolean;
   }
+
+// ─── Clients ─────────────────────────────────────────────────────────────────
+
+export interface Client {
+  id: string;
+  name: string;
+  address: string | null;
+  phone: string | null;
+  notes: string | null;
+  is_active: boolean;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ClientCreate {
+  name: string;
+  address?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+}
+
+export interface ClientUpdate {
+  name?: string;
+  address?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+  is_active?: boolean;
+}
   
   // ─── API errors ──────────────────────────────────────────────────────────────
   

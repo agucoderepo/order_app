@@ -5,8 +5,8 @@ interface NavItem { id: string; label: string; icon: string; adminOnly?: boolean
 const NAV: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: '⊞' },
   { id: 'users',     label: 'Users',     icon: '◎', adminOnly: true },
+  { id: 'clients',   label: 'Clients',   icon: '◑', adminOnly: true },
   // Future nav items added here as app grows:
-  // { id: 'clients',   label: 'Clients',   icon: '◑' },
   // { id: 'providers', label: 'Providers', icon: '◐' },
   // { id: 'products',  label: 'Products',  icon: '▣' },
   // { id: 'orders',    label: 'Orders',    icon: '◈' },

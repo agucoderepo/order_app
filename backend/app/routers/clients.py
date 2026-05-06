@@ -35,6 +35,7 @@ def create_client(
 ):
     row = Client(
         name=payload.name,
+        address=payload.address,
         phone=payload.phone,
         notes=payload.notes,
         created_by=current_user.id,
