@@ -103,6 +103,49 @@ export interface ProviderUpdate {
   is_active?: boolean;
 }
 
+// ─── Products ────────────────────────────────────────────────────────────────
+
+export interface ProviderSummary {
+  id: string;
+  name: string;
+  phone: string | null;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  unit: string;
+  price: string;
+  is_active: boolean;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  provider: ProviderSummary;
+}
+
+export interface ProductCreate {
+  name: string;
+  unit: string;
+  price: number;
+  provider_id: string;
+}
+
+export interface ProductUpdate {
+  name?: string;
+  unit?: string;
+  price?: number;
+  provider_id?: string;
+  is_active?: boolean;
+}
+
+export interface ProductSearchResult {
+  id: string;
+  name: string;
+  unit: string;
+  price: string;
+  provider_name: string;
+}
+
 // ─── API errors ──────────────────────────────────────────────────────────────
   
   export interface ApiError {

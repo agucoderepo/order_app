@@ -15,7 +15,7 @@ Based on current code in `frontend/src` and `backend/app`.
 ### To complete (Admin)
 - [x] Clients management UI (list/create/edit)
 - [x] Providers management UI (list/create/edit)
-- [ ] Products management UI (list/create/edit + search UX)
+- [x] Products management UI (list/create/edit + search UX)
 - [ ] Orders module UI (create/list/update + WhatsApp parse flow)
 - [ ] Shopping lists UI (aggregate, adjust items, finalize)
 - [ ] Purchase orders UI (list/detail/status update + PDF access)
