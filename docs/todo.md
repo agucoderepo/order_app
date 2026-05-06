@@ -13,7 +13,7 @@ Based on current code in `frontend/src` and `backend/app`.
 - [x] Toast system and modal components
 
 ### To complete (Admin)
-- [ ] Clients management UI (list/create/edit)
+- [x] Clients management UI (list/create/edit)
 - [ ] Providers management UI (list/create/edit)
 - [ ] Products management UI (list/create/edit + search UX)
 - [ ] Orders module UI (create/list/update + WhatsApp parse flow)
