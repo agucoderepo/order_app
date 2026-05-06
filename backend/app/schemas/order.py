@@ -18,19 +18,21 @@ ORDER_SOURCES  = {"manual", "whatsapp"}
 class OrderItemBase(BaseModel):
     product_id: UUID
     quantity: Decimal = Field(gt=0, decimal_places=3)
+    # discount is a percentage (0–100). Line total = unit_price × qty × (1 − discount/100)
+    discount: Decimal = Field(default=Decimal("0.00"), ge=0, le=100, decimal_places=2)
     notes: Optional[str] = None
- 
- 
+
+
 class OrderItemCreate(OrderItemBase):
     """unit_price is NOT provided by the client — snapshotted from the DB."""
     pass
- 
- 
+
+
 class OrderItemRead(OrderItemBase):
     id: UUID
     unit_price: Decimal
     product: ProductSummary
- 
+
     model_config = {"from_attributes": True}
  
  

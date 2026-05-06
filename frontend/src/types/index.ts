@@ -103,6 +103,14 @@ export interface ProviderUpdate {
   is_active?: boolean;
 }
 
+// ─── Summaries (shared nested types) ─────────────────────────────────────────
+
+export interface ClientSummary {
+  id: string;
+  name: string;
+  phone: string | null;
+}
+
 // ─── Products ────────────────────────────────────────────────────────────────
 
 export interface ProviderSummary {
@@ -138,12 +146,72 @@ export interface ProductUpdate {
   is_active?: boolean;
 }
 
+export interface ProductSummary {
+  id: string;
+  name: string;
+  unit: string;
+  price: string;
+  provider: ProviderSummary;
+}
+
 export interface ProductSearchResult {
   id: string;
   name: string;
   unit: string;
   price: string;
   provider_name: string;
+}
+
+// ─── Orders ──────────────────────────────────────────────────────────────────
+
+export type OrderStatus = 'draft' | 'confirmed' | 'delivered';
+export type OrderSource = 'manual' | 'whatsapp';
+
+export interface OrderItemCreate {
+  product_id: string;
+  quantity: number;
+  /** Percentage 0–100. Line total = unit_price × qty × (1 − discount/100) */
+  discount?: number;
+  notes?: string | null;
+}
+
+export interface OrderItemRead {
+  id: string;
+  product_id: string;
+  quantity: string;
+  unit_price: string;
+  /** Percentage 0–100. Line total = unit_price × qty × (1 − discount/100) */
+  discount: string;
+  notes: string | null;
+  product: ProductSummary;
+}
+
+export interface OrderCreate {
+  client_id: string;
+  order_date: string;
+  items: OrderItemCreate[];
+  source: OrderSource;
+  notes?: string | null;
+}
+
+export interface OrderUpdate {
+  status?: OrderStatus;
+  notes?: string | null;
+  items?: OrderItemCreate[];
+}
+
+export interface OrderRead {
+  id: string;
+  client_id: string;
+  order_date: string;
+  status: OrderStatus;
+  source: OrderSource;
+  created_by: string;
+  notes: string | null;
+  client: ClientSummary;
+  items: OrderItemRead[];
+  created_at: string;
+  updated_at: string;
 }
 
 // ─── API errors ──────────────────────────────────────────────────────────────

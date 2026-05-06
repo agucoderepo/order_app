@@ -343,6 +343,8 @@ class OrderItem(Base):
     product_id = Column(UUID, ForeignKey("products.id"), nullable=False)
     quantity   = Column(Numeric(10, 3), nullable=False)
     unit_price = Column(Numeric(10, 2), nullable=False)   # Snapshot at order time
+    # discount_pct: percentage 0–100. Line total = unit_price * quantity * (1 - discount/100)
+    discount   = Column(Numeric(5, 2), nullable=False, default=Decimal("0.00"))
     notes      = Column(Text, nullable=True)
 
     # Relationships
