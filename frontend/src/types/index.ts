@@ -71,7 +71,39 @@ export interface ClientUpdate {
   is_active?: boolean;
 }
   
-  // ─── API errors ──────────────────────────────────────────────────────────────
+  // ─── Providers ───────────────────────────────────────────────────────────────
+
+export interface Provider {
+  id: string;
+  name: string;
+  address: string | null;
+  contact_name: string | null;
+  phone: string | null;
+  notes: string | null;
+  is_active: boolean;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProviderCreate {
+  name: string;
+  address?: string | null;
+  contact_name?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+}
+
+export interface ProviderUpdate {
+  name?: string;
+  address?: string | null;
+  contact_name?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+  is_active?: boolean;
+}
+
+// ─── API errors ──────────────────────────────────────────────────────────────
   
   export interface ApiError {
     detail: string;

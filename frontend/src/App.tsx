@@ -6,18 +6,20 @@ import Login from './pages/Login.tsx';
 import Dashboard from './pages/Dashboard.tsx';
 import Users from './pages/Users.tsx';
 import Clients from './pages/Clients.tsx';
+import Providers from './pages/Providers.tsx';
 import './styles/globals.css';
 
-type Page = 'dashboard' | 'users' | 'clients';
+type Page = 'dashboard' | 'users' | 'clients' | 'providers';
 
 const PAGE_META: Record<Page, { title: string; sub: string }> = {
-  dashboard: { title: 'Dashboard',        sub: 'Overview and quick access' },
-  users:     { title: 'User management',  sub: 'Create, edit and deactivate accounts' },
-  clients:   { title: 'Client management', sub: 'Create, edit and deactivate clients' },
+  dashboard: { title: 'Dashboard',          sub: 'Overview and quick access' },
+  users:     { title: 'User management',    sub: 'Create, edit and deactivate accounts' },
+  clients:   { title: 'Client management',  sub: 'Create, edit and deactivate clients' },
+  providers: { title: 'Provider management', sub: 'Create, edit and deactivate providers' },
 };
 
 function isPage(value: string): value is Page {
-  return value === 'dashboard' || value === 'users' || value === 'clients';
+  return value === 'dashboard' || value === 'users' || value === 'clients' || value === 'providers';
 }
 
 export default function App() {
@@ -71,6 +73,7 @@ export default function App() {
             {safePage === 'dashboard' && <Dashboard user={user} />}
             {safePage === 'users'     && <Users currentUser={user} toast={toast} />}
             {safePage === 'clients'   && <Clients toast={toast} />}
+            {safePage === 'providers' && <Providers toast={toast} />}
           </div>
         </div>
       </div>

@@ -6,8 +6,8 @@ const NAV: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: '⊞' },
   { id: 'users',     label: 'Users',     icon: '◎', adminOnly: true },
   { id: 'clients',   label: 'Clients',   icon: '◑', adminOnly: true },
+  { id: 'providers', label: 'Providers', icon: '◐', adminOnly: true },
   // Future nav items added here as app grows:
-  // { id: 'providers', label: 'Providers', icon: '◐' },
   // { id: 'products',  label: 'Products',  icon: '▣' },
   // { id: 'orders',    label: 'Orders',    icon: '◈' },
 ];
