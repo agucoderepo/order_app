@@ -25,7 +25,7 @@ Based on current code in `frontend/src` and `backend/app`.
 - [x] Provider purchase order browser print view
 
 ### To complete (Operator)
-- [ ] Operator-focused dashboard widgets (today orders, pending actions)
+- [x] Operator-focused dashboard widgets (today orders, pending actions)
 - [ ] Order capture/creation flow
 - [ ] Client quick search/creation from order flow
 - [ ] Product search and item entry flow
