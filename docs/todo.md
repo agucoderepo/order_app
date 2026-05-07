@@ -26,9 +26,9 @@ Based on current code in `frontend/src` and `backend/app`.
 
 ### To complete (Operator)
 - [x] Operator-focused dashboard widgets (today orders, pending actions)
-- [ ] Order capture/creation flow
-- [ ] Client quick search/creation from order flow
-- [ ] Product search and item entry flow
+- [x] Order capture/creation flow
+- [x] Client quick search/creation from order flow
+- [x] Product search and item entry flow
 - [ ] Restricted views for shopping/purchase/invoice modules (as required by business rules)
 
 ## Backend
