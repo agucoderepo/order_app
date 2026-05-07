@@ -11,10 +11,11 @@ import Products from './pages/Products.tsx';
 import Orders from './pages/Orders.tsx';
 import ShoppingLists from './pages/ShoppingLists.tsx';
 import PurchaseOrders from './pages/PurchaseOrders.tsx';
+import Invoices from './pages/Invoices.tsx';
 import AuditLog from './pages/AuditLog.tsx';
 import './styles/globals.css';
 
-type Page = 'dashboard' | 'users' | 'clients' | 'providers' | 'products' | 'orders' | 'shopping-lists' | 'purchase-orders' | 'audit-log';
+type Page = 'dashboard' | 'users' | 'clients' | 'providers' | 'products' | 'orders' | 'shopping-lists' | 'purchase-orders' | 'invoices' | 'audit-log';
 
 const PAGE_META: Record<Page, { title: string; sub: string }> = {
   dashboard:       { title: 'Dashboard',          sub: 'Overview and quick access' },
@@ -25,11 +26,12 @@ const PAGE_META: Record<Page, { title: string; sub: string }> = {
   orders:          { title: 'Orders',             sub: 'Create and manage customer orders' },
   'shopping-lists':  { title: 'Shopping lists',    sub: 'Aggregate confirmed orders and prepare daily procurement' },
   'purchase-orders': { title: 'Purchase orders',   sub: 'Track and manage supplier purchase orders' },
+  'invoices':        { title: 'Invoices',           sub: 'View and manage client invoices' },
   'audit-log':       { title: 'Audit log',         sub: 'Track every action performed in the system' },
 };
 
 function isPage(value: string): value is Page {
-  return ['dashboard', 'users', 'clients', 'providers', 'products', 'orders', 'shopping-lists', 'purchase-orders', 'audit-log'].includes(value);
+  return ['dashboard', 'users', 'clients', 'providers', 'products', 'orders', 'shopping-lists', 'purchase-orders', 'invoices', 'audit-log'].includes(value);
 }
 
 export default function App() {
@@ -88,6 +90,7 @@ export default function App() {
             {safePage === 'orders'         && <Orders toast={toast} />}
             {safePage === 'shopping-lists'  && <ShoppingLists toast={toast} />}
             {safePage === 'purchase-orders' && <PurchaseOrders toast={toast} />}
+            {safePage === 'invoices'        && <Invoices toast={toast} />}
             {safePage === 'audit-log'       && <AuditLog toast={toast} />}
           </div>
         </div>

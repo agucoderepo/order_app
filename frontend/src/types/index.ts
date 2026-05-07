@@ -286,6 +286,38 @@ export interface PurchaseOrderUpdate {
   status?: PurchaseOrderStatus;
 }
 
+// ─── Invoices ────────────────────────────────────────────────────────────────
+
+export type InvoiceStatus = 'draft' | 'sent' | 'paid';
+
+export interface InvoiceSummary {
+  id: string;
+  invoice_number: string;
+  client: ClientSummary;
+  order_date: string;
+  total_amount: string;
+  status: InvoiceStatus;
+  pdf_path: string | null;
+}
+
+export interface InvoiceRead {
+  id: string;
+  order_id: string;
+  client: ClientSummary;
+  invoice_number: string;
+  total_amount: string;
+  status: InvoiceStatus;
+  pdf_path: string | null;
+  created_by: string;
+  created_at: string;
+  order_date: string;
+  items: OrderItemRead[];
+}
+
+export interface InvoiceUpdate {
+  status?: InvoiceStatus;
+}
+
 // ─── Audit Logs ──────────────────────────────────────────────────────────────
 
 export interface AuditLog {

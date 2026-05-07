@@ -10,14 +10,14 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
 from app.dependencies.auth import get_current_user
-from app.models import Product, PurchaseOrder, ShoppingList, ShoppingListItem, User
+from app.models import Invoice, Order, Product, PurchaseOrder, ShoppingList, ShoppingListItem, User
 from app.schemas.shopping_list import (
     ProviderGroup,
     ShoppingListItemAdjust,
     ShoppingListItemRead,
     ShoppingListRead,
 )
-from app.services import audit_service, shopping_list_service
+from app.services import audit_service, invoice_service, shopping_list_service
 
 router = APIRouter()
 
@@ -150,16 +150,20 @@ def finalize_list(
         )
     sl.status = "finalized"
     sl.finalized_at = datetime.now(timezone.utc)
+    sl.finalize_count = (sl.finalize_count or 0) + 1
     audit_service.log(
         db, user=current_user,
         action="shopping_list.finalize",
         entity_type="shopping_list", entity_id=str(sl.id),
-        detail=str(list_date),
+        detail=f"{list_date} count={sl.finalize_count}",
     )
     db.commit()
     sl = _list_with_items(db, list_date)
     assert sl is not None
     shopping_list_service.create_purchase_orders_for_list(sl, str(current_user.id), db)
+    invoice_service.create_invoices_for_list(
+        list_date, sl.finalize_count, str(current_user.id), db
+    )
     sl = _list_with_items(db, list_date)
     assert sl is not None
     return _to_read(sl)
@@ -179,12 +183,15 @@ def reopen_list(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="List is not finalized",
         )
-    # Delete all purchase orders (and their items via DB CASCADE) for this list
+    # Delete purchase orders (items cascade via DB)
     db.query(PurchaseOrder).filter(
         PurchaseOrder.shopping_list_id == sl.id
     ).delete(synchronize_session="fetch")
+    # Delete invoices for confirmed orders on this date
+    invoice_service.delete_invoices_for_date(list_date, db)
     sl.status = "open"
     sl.finalized_at = None
+    # finalize_count intentionally NOT reset — tracks cumulative finalizations
     audit_service.log(
         db, user=current_user,
         action="shopping_list.reopen",

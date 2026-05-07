@@ -20,7 +20,9 @@ Based on current code in `frontend/src` and `backend/app`.
 - [x] Shopping lists UI (aggregate, adjust items, finalize, re-open)
 - [x] Purchase orders UI (list/detail/status update + PDF access)
 - [x] Audit log UI (filterable table, admin-only)
-- [ ] Invoices UI (list/detail/status update + PDF access)
+- [x] Invoices UI (list/detail/status update + browser print)
+- [x] Auto-create invoices on shopping list finalize (one per confirmed order, with timestamp in invoice number; re-finalize appends -UPDn suffix)
+- [x] Provider purchase order browser print view
 
 ### To complete (Operator)
 - [ ] Operator-focused dashboard widgets (today orders, pending actions)
@@ -54,6 +56,7 @@ Based on current code in `frontend/src` and `backend/app`.
 - [x] Invoices list/get/update status
 
 ### To complete (Backend hardening and scope)
+- [ ] Server-side PDF generation for invoices and purchase orders (WeasyPrint or ReportLab) — replace browser-print with actual PDF files stored at pdf_path
 - [ ] Add missing delete/archive endpoints where needed (if required by business rules)
 - [ ] Enforce role permissions per module (Admin vs Operator) beyond users-only admin checks
 - [ ] Add consistent pagination/filters/sorting for all list endpoints

@@ -83,16 +83,24 @@ export default function PurchaseOrderDetailModal({ poId, onClose, onUpdated, toa
             </div>
 
             <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              {po.pdf_path && (
-                <a
-                  href={po.pdf_path}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn btn-ghost btn-sm"
-                >
-                  ↓ PDF
-                </a>
-              )}
+              <a
+                href={`/api/purchase-orders/${po.id}/print?token=${localStorage.getItem('access_token') ?? ''}`}
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-ghost btn-sm"
+                title="Clean version for the provider"
+              >
+                Print for provider
+              </a>
+              <a
+                href={`/api/purchase-orders/${po.id}/print-breakdown?token=${localStorage.getItem('access_token') ?? ''}`}
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-ghost btn-sm"
+                title="Includes per-client quantity breakdown — for internal use"
+              >
+                Print w/ breakdown
+              </a>
               {NEXT_ACTION[po.status] && (
                 <button className="btn btn-primary btn-sm" onClick={advanceStatus} disabled={updating}>
                   {updating ? <span className="spinner" /> : NEXT_ACTION[po.status]}

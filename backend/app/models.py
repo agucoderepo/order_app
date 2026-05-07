@@ -15,7 +15,7 @@ from datetime import datetime, date
 
 from sqlalchemy import (
     Boolean, Column, Date, DateTime, ForeignKey,
-    Index, Numeric, String, Text, UniqueConstraint,
+    Index, Integer, Numeric, String, Text, UniqueConstraint,
     func,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
@@ -377,12 +377,13 @@ class ShoppingList(Base):
     """
     __tablename__ = "shopping_lists"
 
-    id           = Column(UUID, primary_key=True, default=new_uuid)
-    list_date    = Column(Date, nullable=False, unique=True)
-    status       = Column(String(50), nullable=False, default="open")
-    created_by   = Column(UUID, ForeignKey("users.id"), nullable=False)
-    finalized_at = Column(DateTime, nullable=True)
-    created_at   = Column(DateTime, nullable=False, server_default=func.now())
+    id             = Column(UUID, primary_key=True, default=new_uuid)
+    list_date      = Column(Date, nullable=False, unique=True)
+    status         = Column(String(50), nullable=False, default="open")
+    created_by     = Column(UUID, ForeignKey("users.id"), nullable=False)
+    finalized_at   = Column(DateTime, nullable=True)
+    finalize_count = Column(Integer, nullable=False, default=0)
+    created_at     = Column(DateTime, nullable=False, server_default=func.now())
 
     # Relationships
     created_by_user = relationship("User", back_populates="shopping_lists")
