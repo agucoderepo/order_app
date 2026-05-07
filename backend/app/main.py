@@ -7,7 +7,7 @@ from app.config import settings
 from app.database import engine
 from app.models import Base
 from app.routers import auth, users, clients, providers, products, orders
-from app.routers import shopping_lists, purchase_orders, invoices
+from app.routers import shopping_lists, purchase_orders, invoices, audit_logs
 
 
 @asynccontextmanager
@@ -44,3 +44,4 @@ app.include_router(orders.router,         prefix="/orders",          tags=["orde
 app.include_router(shopping_lists.router, prefix="/shopping-lists",  tags=["shopping-lists"])
 app.include_router(purchase_orders.router,prefix="/purchase-orders", tags=["purchase-orders"])
 app.include_router(invoices.router,       prefix="/invoices",        tags=["invoices"])
+app.include_router(audit_logs.router,     prefix="/audit-logs",      tags=["audit-logs"])

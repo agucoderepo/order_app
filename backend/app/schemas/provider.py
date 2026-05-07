@@ -11,6 +11,7 @@ from app.schemas import TimestampMixin
 
 class ProviderBase(BaseModel):
     name: str = Field(min_length=1, max_length=255)
+    address: Optional[str] = Field(default=None, max_length=255)
     contact_name: Optional[str] = Field(default=None, max_length=255)
     phone: Optional[str] = Field(default=None, max_length=50)
     notes: Optional[str] = None
@@ -22,6 +23,7 @@ class ProviderCreate(ProviderBase):
  
 class ProviderUpdate(BaseModel):
     name: Optional[str] = Field(default=None, min_length=1, max_length=255)
+    address: Optional[str] = Field(default=None, max_length=255)
     contact_name: Optional[str] = Field(default=None, max_length=255)
     phone: Optional[str] = Field(default=None, max_length=50)
     notes: Optional[str] = None

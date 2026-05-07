@@ -10,6 +10,7 @@ from app.dependencies.auth import get_current_user, require_admin
 from app.models import User
 from app.routers.auth import pwd_context
 from app.schemas.user import UserCreate, UserRead, UserUpdate
+from app.services import audit_service
 
 router = APIRouter()
 
@@ -33,7 +34,7 @@ def list_users(
 def create_user(
     payload: UserCreate,
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    current_user: User = Depends(require_admin),
 ):
     if db.query(User).filter(User.email == payload.email).first():
         raise HTTPException(
@@ -48,6 +49,13 @@ def create_user(
         is_active=payload.is_active,
     )
     db.add(user)
+    db.flush()
+    audit_service.log(
+        db, user=current_user,
+        action="user.create",
+        entity_type="user", entity_id=str(user.id),
+        detail=f"email={user.email} role={user.role}",
+    )
     db.commit()
     db.refresh(user)
     return user
@@ -58,7 +66,7 @@ def update_user(
     user_id: str,
     payload: UserUpdate,
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    current_user: User = Depends(require_admin),
 ):
     try:
         uid = uuid.UUID(user_id)
@@ -73,6 +81,12 @@ def update_user(
         setattr(user, k, v)
     if password is not None:
         user.password_hash = pwd_context.hash(password)
+    audit_service.log(
+        db, user=current_user,
+        action="user.update",
+        entity_type="user", entity_id=str(uid),
+        detail=str(list(data.keys())),
+    )
     db.commit()
     db.refresh(user)
     return user

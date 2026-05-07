@@ -109,6 +109,7 @@ def create_order(
                 product_id=line.product_id,
                 quantity=line.quantity,
                 unit_price=Decimal(str(prod.price)),
+                discount=line.discount,
                 notes=line.notes,
             )
         )
@@ -159,6 +160,7 @@ def update_order(db: Session, order: Order, payload: OrderUpdate) -> Order:
                     product_id=line.product_id,
                     quantity=line.quantity,
                     unit_price=Decimal(str(prod.price)),
+                    discount=line.discount,
                     notes=line.notes,
                 )
             )

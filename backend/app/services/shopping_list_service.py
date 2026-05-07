@@ -1,9 +1,11 @@
+from collections import defaultdict
 from datetime import date
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.models import (
-    ShoppingList, ShoppingListItem, Order, OrderItem, Product
+    ShoppingList, ShoppingListItem, Order, OrderItem, Product,
+    PurchaseOrder, PurchaseOrderItem,
 )
 
 
@@ -54,3 +56,42 @@ def aggregate_orders_into_list(list_date: date, user_id: str, db: Session) -> Sh
     db.commit()
     db.refresh(sl)
     return sl
+
+
+def create_purchase_orders_for_list(sl: ShoppingList, user_id: str, db: Session) -> None:
+    """
+    Create one PurchaseOrder per provider from a finalized ShoppingList.
+    Each PO contains the items for that provider with final_quantity and
+    a snapshotted unit_price from the product at finalization time.
+    Idempotent — skips providers that already have a PO for this list.
+    """
+    by_provider: dict = defaultdict(list)
+    for item in sl.items:
+        by_provider[item.provider_id].append(item)
+
+    for provider_id, items in by_provider.items():
+        existing = db.query(PurchaseOrder).filter(
+            PurchaseOrder.shopping_list_id == sl.id,
+            PurchaseOrder.provider_id == provider_id,
+        ).first()
+        if existing:
+            continue
+
+        po = PurchaseOrder(
+            shopping_list_id=sl.id,
+            provider_id=provider_id,
+            status="pending",
+            created_by=user_id,
+        )
+        db.add(po)
+        db.flush()
+
+        for item in items:
+            db.add(PurchaseOrderItem(
+                purchase_order_id=po.id,
+                product_id=item.product_id,
+                quantity=item.final_quantity,
+                unit_price=item.product.price,
+            ))
+
+    db.commit()

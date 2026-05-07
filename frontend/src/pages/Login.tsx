@@ -16,7 +16,11 @@ export default function Login({ onLogin }: Props) {
     try {
       await onLogin(form);
     } catch (err: any) {
-      setError(err.response?.data?.detail ?? err.message ?? 'Login failed');
+      const detail = err.response?.data?.detail;
+      const msg = Array.isArray(detail)
+        ? 'Invalid email or password'
+        : (typeof detail === 'string' ? detail : err.message ?? 'Login failed');
+      setError(msg);
     } finally {
       setLoading(false);
     }

@@ -15,7 +15,7 @@ from datetime import datetime, date
 
 from sqlalchemy import (
     Boolean, Column, Date, DateTime, ForeignKey,
-    Index, Numeric, String, Text, UniqueConstraint,
+    Index, Integer, Numeric, String, Text, UniqueConstraint,
     func,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
@@ -107,6 +107,7 @@ class User(Base):
     shopping_lists  = relationship("ShoppingList", back_populates="created_by_user")
     purchase_orders = relationship("PurchaseOrder", back_populates="created_by_user")
     invoices        = relationship("Invoice", back_populates="created_by_user")
+    audit_logs      = relationship("AuditLog", back_populates="user")
 
     __table_args__ = (
         Index("idx_users_email", "email"),
@@ -189,6 +190,7 @@ class Client(Base):
 
     id         = Column(UUID, primary_key=True, default=new_uuid)
     name       = Column(String(255), nullable=False)
+    address    = Column(String(255), nullable=True)
     phone      = Column(String(50), nullable=True)
     notes      = Column(Text, nullable=True)
     is_active  = Column(Boolean, nullable=False, default=True)
@@ -218,6 +220,7 @@ class Provider(Base):
 
     id           = Column(UUID, primary_key=True, default=new_uuid)
     name         = Column(String(255), nullable=False)
+    address      = Column(String(255), nullable=True)
     contact_name = Column(String(255), nullable=True)
     phone        = Column(String(50), nullable=True)
     notes        = Column(Text, nullable=True)
@@ -341,6 +344,8 @@ class OrderItem(Base):
     product_id = Column(UUID, ForeignKey("products.id"), nullable=False)
     quantity   = Column(Numeric(10, 3), nullable=False)
     unit_price = Column(Numeric(10, 2), nullable=False)   # Snapshot at order time
+    # discount_pct: percentage 0–100. Line total = unit_price * quantity * (1 - discount/100)
+    discount   = Column(Numeric(5, 2), nullable=False, default=Decimal("0.00"))
     notes      = Column(Text, nullable=True)
 
     # Relationships
@@ -372,12 +377,13 @@ class ShoppingList(Base):
     """
     __tablename__ = "shopping_lists"
 
-    id           = Column(UUID, primary_key=True, default=new_uuid)
-    list_date    = Column(Date, nullable=False, unique=True)
-    status       = Column(String(50), nullable=False, default="open")
-    created_by   = Column(UUID, ForeignKey("users.id"), nullable=False)
-    finalized_at = Column(DateTime, nullable=True)
-    created_at   = Column(DateTime, nullable=False, server_default=func.now())
+    id             = Column(UUID, primary_key=True, default=new_uuid)
+    list_date      = Column(Date, nullable=False, unique=True)
+    status         = Column(String(50), nullable=False, default="open")
+    created_by     = Column(UUID, ForeignKey("users.id"), nullable=False)
+    finalized_at   = Column(DateTime, nullable=True)
+    finalize_count = Column(Integer, nullable=False, default=0)
+    created_at     = Column(DateTime, nullable=False, server_default=func.now())
 
     # Relationships
     created_by_user = relationship("User", back_populates="shopping_lists")
@@ -556,3 +562,36 @@ class Invoice(Base):
     def __repr__(self):
         return (f"<Invoice id={self.id} number={self.invoice_number} "
                 f"status={self.status} total={self.total_amount}>")
+
+
+# ---------------------------------------------------------------------------
+# Audit Log
+# ---------------------------------------------------------------------------
+
+class AuditLog(Base):
+    """
+    Append-only record of every significant user action.
+    user_email is denormalised so history is preserved even after user deletion.
+    """
+    __tablename__ = "audit_logs"
+
+    id          = Column(UUID, primary_key=True, default=new_uuid)
+    user_id     = Column(UUID, ForeignKey("users.id"), nullable=False)
+    user_email  = Column(String(255), nullable=False)
+    action      = Column(String(100), nullable=False)   # e.g. "order.status_changed"
+    entity_type = Column(String(50),  nullable=True)    # e.g. "order"
+    entity_id   = Column(String(36),  nullable=True)    # UUID as string
+    detail      = Column(Text,        nullable=True)    # human-readable description
+    created_at  = Column(DateTime, nullable=False, server_default=func.now())
+
+    user = relationship("User", back_populates="audit_logs")
+
+    __table_args__ = (
+        Index("idx_audit_logs_user_id",     "user_id"),
+        Index("idx_audit_logs_action",      "action"),
+        Index("idx_audit_logs_entity_type", "entity_type"),
+        Index("idx_audit_logs_created_at",  "created_at"),
+    )
+
+    def __repr__(self):
+        return f"<AuditLog action={self.action} user={self.user_email}>"

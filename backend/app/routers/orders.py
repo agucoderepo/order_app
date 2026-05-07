@@ -5,7 +5,7 @@ from app.database import get_db
 from app.dependencies.auth import get_current_user
 from app.models import User
 from app.schemas.order import OrderCreate, OrderRead, OrderUpdate
-from app.services import order_service, whatsapp_parser
+from app.services import audit_service, order_service, whatsapp_parser
 
 router = APIRouter()
 
@@ -26,7 +26,15 @@ def create_order(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return order_service.create_order(db, payload, created_by=current_user.id)
+    order = order_service.create_order(db, payload, created_by=current_user.id)
+    audit_service.log(
+        db, user=current_user,
+        action="order.create",
+        entity_type="order", entity_id=str(order.id),
+        detail=f"client_id={order.client_id} status={order.status}",
+    )
+    db.commit()
+    return order
 
 
 @router.post("/parse-whatsapp")
@@ -51,4 +59,14 @@ def update_order(
     current_user: User = Depends(get_current_user),
 ):
     order = order_service.get_order_or_404(db, order_id)
-    return order_service.update_order(db, order, payload)
+    old_status = order.status
+    updated = order_service.update_order(db, order, payload)
+    detail = f"status={old_status}->{updated.status}" if payload.status and old_status != updated.status else None
+    audit_service.log(
+        db, user=current_user,
+        action="order.update",
+        entity_type="order", entity_id=str(updated.id),
+        detail=detail,
+    )
+    db.commit()
+    return updated

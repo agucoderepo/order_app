@@ -5,14 +5,34 @@ import Toast from './components/Toast';
 import Login from './pages/Login.tsx';
 import Dashboard from './pages/Dashboard.tsx';
 import Users from './pages/Users.tsx';
+import Clients from './pages/Clients.tsx';
+import Providers from './pages/Providers.tsx';
+import Products from './pages/Products.tsx';
+import Orders from './pages/Orders.tsx';
+import ShoppingLists from './pages/ShoppingLists.tsx';
+import PurchaseOrders from './pages/PurchaseOrders.tsx';
+import Invoices from './pages/Invoices.tsx';
+import AuditLog from './pages/AuditLog.tsx';
 import './styles/globals.css';
 
-type Page = 'dashboard' | 'users';
+type Page = 'dashboard' | 'users' | 'clients' | 'providers' | 'products' | 'orders' | 'shopping-lists' | 'purchase-orders' | 'invoices' | 'audit-log';
 
 const PAGE_META: Record<Page, { title: string; sub: string }> = {
-  dashboard: { title: 'Dashboard',        sub: 'Overview and quick access' },
-  users:     { title: 'User management',  sub: 'Create, edit and deactivate accounts' },
+  dashboard:       { title: 'Dashboard',          sub: 'Overview and quick access' },
+  users:           { title: 'User management',    sub: 'Create, edit and deactivate accounts' },
+  clients:         { title: 'Client management',  sub: 'Create, edit and deactivate clients' },
+  providers:       { title: 'Provider management', sub: 'Create, edit and deactivate providers' },
+  products:        { title: 'Product management', sub: 'Create, edit and manage product catalog' },
+  orders:          { title: 'Orders',             sub: 'Create and manage customer orders' },
+  'shopping-lists':  { title: 'Shopping lists',    sub: 'Aggregate confirmed orders and prepare daily procurement' },
+  'purchase-orders': { title: 'Purchase orders',   sub: 'Track and manage supplier purchase orders' },
+  'invoices':        { title: 'Invoices',           sub: 'View and manage client invoices' },
+  'audit-log':       { title: 'Audit log',         sub: 'Track every action performed in the system' },
 };
+
+function isPage(value: string): value is Page {
+  return ['dashboard', 'users', 'clients', 'providers', 'products', 'orders', 'shopping-lists', 'purchase-orders', 'invoices', 'audit-log'].includes(value);
+}
 
 export default function App() {
   const { user, authed, loading, login, logout } = useAuth();
@@ -37,12 +57,18 @@ export default function App() {
     );
   }
 
-  const meta = PAGE_META[page];
+  const safePage: Page = isPage(page) ? page : 'dashboard';
+  const meta = PAGE_META[safePage];
 
   return (
     <>
       <div style={{ display: 'flex', minHeight: '100vh' }}>
-        <Sidebar page={page} setPage={(p) => setPage(p as Page)} user={user} onLogout={logout} />
+        <Sidebar
+          page={safePage}
+          setPage={(p) => setPage(isPage(p) ? p : 'dashboard')}
+          user={user}
+          onLogout={logout}
+        />
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh', overflow: 'auto' }}>
           {/* Topbar */}
@@ -56,8 +82,16 @@ export default function App() {
 
           {/* Page content */}
           <div style={{ padding: '28px 32px', flex: 1 }}>
-            {page === 'dashboard' && <Dashboard user={user} />}
-            {page === 'users'     && <Users currentUser={user} toast={toast} />}
+            {safePage === 'dashboard' && <Dashboard user={user} />}
+            {safePage === 'users'     && <Users currentUser={user} toast={toast} />}
+            {safePage === 'clients'   && <Clients toast={toast} />}
+            {safePage === 'providers' && <Providers toast={toast} />}
+            {safePage === 'products'  && <Products toast={toast} />}
+            {safePage === 'orders'         && <Orders toast={toast} />}
+            {safePage === 'shopping-lists'  && <ShoppingLists toast={toast} />}
+            {safePage === 'purchase-orders' && <PurchaseOrders toast={toast} />}
+            {safePage === 'invoices'        && <Invoices toast={toast} />}
+            {safePage === 'audit-log'       && <AuditLog toast={toast} />}
           </div>
         </div>
       </div>

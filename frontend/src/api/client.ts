@@ -13,19 +13,27 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// ── Handle 401 globally — clear session and redirect to login ─────────────────
+// ── Handle 401 globally and normalise FastAPI error shapes ───────────────────
 apiClient.interceptors.response.use(
   (res) => res,
   (err) => {
     const status = err.response?.status;
     const url = String(err.config?.url ?? '');
-    const isLoginRequest = url.includes('/auth/login');
 
-    if (status === 401 && !isLoginRequest) {
+    if (status === 401 && !url.includes('/auth/login')) {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       window.location.href = '/';
     }
+
+    // FastAPI 422 returns detail as an array of validation objects.
+    // Flatten to a plain string so components can safely render it.
+    if (err.response?.data?.detail && Array.isArray(err.response.data.detail)) {
+      err.response.data.detail = err.response.data.detail
+        .map((d: any) => d.msg ?? JSON.stringify(d))
+        .join('; ');
+    }
+
     return Promise.reject(err);
   }
 );

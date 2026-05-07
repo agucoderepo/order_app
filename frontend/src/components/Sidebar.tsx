@@ -5,11 +5,15 @@ interface NavItem { id: string; label: string; icon: string; adminOnly?: boolean
 const NAV: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: '⊞' },
   { id: 'users',     label: 'Users',     icon: '◎', adminOnly: true },
+  { id: 'clients',   label: 'Clients',   icon: '◑', adminOnly: true },
+  { id: 'providers', label: 'Providers', icon: '◐', adminOnly: true },
+  { id: 'products',  label: 'Products',  icon: '▣', adminOnly: true },
+  { id: 'orders',          label: 'Orders',         icon: '◈' },
+  { id: 'shopping-lists',  label: 'Shopping lists',  icon: '▤', adminOnly: true },
+  { id: 'purchase-orders', label: 'Purchase orders', icon: '◻', adminOnly: true },
+  { id: 'invoices',        label: 'Invoices',        icon: '◫', adminOnly: true },
+  { id: 'audit-log',      label: 'Audit log',      icon: '▦', adminOnly: true },
   // Future nav items added here as app grows:
-  // { id: 'clients',   label: 'Clients',   icon: '◑' },
-  // { id: 'providers', label: 'Providers', icon: '◐' },
-  // { id: 'products',  label: 'Products',  icon: '▣' },
-  // { id: 'orders',    label: 'Orders',    icon: '◈' },
 ];
 
 interface Props {

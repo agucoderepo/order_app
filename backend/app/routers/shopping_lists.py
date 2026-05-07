@@ -10,14 +10,14 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
 from app.dependencies.auth import get_current_user
-from app.models import Product, ShoppingList, ShoppingListItem, User
+from app.models import Invoice, Order, Product, PurchaseOrder, ShoppingList, ShoppingListItem, User
 from app.schemas.shopping_list import (
     ProviderGroup,
     ShoppingListItemAdjust,
     ShoppingListItemRead,
     ShoppingListRead,
 )
-from app.services import shopping_list_service
+from app.services import audit_service, invoice_service, shopping_list_service
 
 router = APIRouter()
 
@@ -75,6 +75,13 @@ def aggregate_list(
     sl = _list_with_items(db, list_date)
     if not sl:
         raise HTTPException(status_code=404, detail="Shopping list not found")
+    audit_service.log(
+        db, user=current_user,
+        action="shopping_list.aggregate",
+        entity_type="shopping_list", entity_id=str(sl.id),
+        detail=str(list_date),
+    )
+    db.commit()
     return _to_read(sl)
 
 
@@ -99,7 +106,7 @@ def adjust_item(
     item_id: str,
     payload: ShoppingListItemAdjust,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     try:
         iid = uuid.UUID(item_id)
@@ -115,6 +122,12 @@ def adjust_item(
         item.adjusted_quantity = payload.adjusted_quantity
     if payload.notes is not None:
         item.notes = payload.notes
+    audit_service.log(
+        db, user=current_user,
+        action="shopping_list.adjust_item",
+        entity_type="shopping_list_item", entity_id=str(iid),
+        detail=f"adj_qty={payload.adjusted_quantity} notes={payload.notes}",
+    )
     db.commit()
     sl = _list_with_items(db, list_date)
     assert sl is not None
@@ -125,7 +138,7 @@ def adjust_item(
 def finalize_list(
     list_date: date,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     sl = _list_with_items(db, list_date)
     if not sl:
@@ -137,6 +150,54 @@ def finalize_list(
         )
     sl.status = "finalized"
     sl.finalized_at = datetime.now(timezone.utc)
+    sl.finalize_count = (sl.finalize_count or 0) + 1
+    audit_service.log(
+        db, user=current_user,
+        action="shopping_list.finalize",
+        entity_type="shopping_list", entity_id=str(sl.id),
+        detail=f"{list_date} count={sl.finalize_count}",
+    )
+    db.commit()
+    sl = _list_with_items(db, list_date)
+    assert sl is not None
+    shopping_list_service.create_purchase_orders_for_list(sl, str(current_user.id), db)
+    invoice_service.create_invoices_for_list(
+        list_date, sl.finalize_count, str(current_user.id), db
+    )
+    sl = _list_with_items(db, list_date)
+    assert sl is not None
+    return _to_read(sl)
+
+
+@router.patch("/{list_date}/reopen", response_model=ShoppingListRead)
+def reopen_list(
+    list_date: date,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    sl = _list_with_items(db, list_date)
+    if not sl:
+        raise HTTPException(status_code=404, detail="Shopping list not found")
+    if sl.status != "finalized":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="List is not finalized",
+        )
+    # Delete purchase orders (items cascade via DB)
+    db.query(PurchaseOrder).filter(
+        PurchaseOrder.shopping_list_id == sl.id
+    ).delete(synchronize_session="fetch")
+    # Delete invoices for confirmed orders on this date
+    invoice_service.delete_invoices_for_date(list_date, db)
+    sl.status = "open"
+    sl.finalized_at = None
+    # finalize_count intentionally NOT reset — tracks cumulative finalizations
+    audit_service.log(
+        db, user=current_user,
+        action="shopping_list.reopen",
+        entity_type="shopping_list", entity_id=str(sl.id),
+        detail=str(list_date),
+    )
     db.commit()
     sl = _list_with_items(db, list_date)
     assert sl is not None
