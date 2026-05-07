@@ -9,7 +9,9 @@ const NAV: NavItem[] = [
   { id: 'providers', label: 'Providers', icon: '◐', adminOnly: true },
   { id: 'products',  label: 'Products',  icon: '▣', adminOnly: true },
   { id: 'orders',          label: 'Orders',         icon: '◈' },
-  { id: 'shopping-lists',  label: 'Shopping lists', icon: '▤', adminOnly: true },
+  { id: 'shopping-lists',  label: 'Shopping lists',  icon: '▤', adminOnly: true },
+  { id: 'purchase-orders', label: 'Purchase orders', icon: '◻', adminOnly: true },
+  { id: 'audit-log',      label: 'Audit log',      icon: '▦', adminOnly: true },
   // Future nav items added here as app grows:
 ];
 

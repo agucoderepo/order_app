@@ -17,8 +17,9 @@ Based on current code in `frontend/src` and `backend/app`.
 - [x] Providers management UI (list/create/edit)
 - [x] Products management UI (list/create/edit + search UX)
 - [x] Orders module UI (create/list/update)
-- [x] Shopping lists UI (aggregate, adjust items, finalize)
-- [ ] Purchase orders UI (list/detail/status update + PDF access)
+- [x] Shopping lists UI (aggregate, adjust items, finalize, re-open)
+- [x] Purchase orders UI (list/detail/status update + PDF access)
+- [x] Audit log UI (filterable table, admin-only)
 - [ ] Invoices UI (list/detail/status update + PDF access)
 
 ### To complete (Operator)
@@ -57,7 +58,7 @@ Based on current code in `frontend/src` and `backend/app`.
 - [ ] Enforce role permissions per module (Admin vs Operator) beyond users-only admin checks
 - [ ] Add consistent pagination/filters/sorting for all list endpoints
 - [ ] Add domain validations (state transitions, constraints, clearer error details)
-- [ ] Add audit logging (who changed status/quantities/prices and when)
+- [x] Add audit logging (who changed status/quantities/prices and when)
 - [ ] Add integration + unit tests for all routers/services
 - [ ] Add Alembic migrations for production-safe schema evolution
 - [ ] Improve CORS/env configuration for all frontend dev origins in use

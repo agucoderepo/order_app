@@ -9,6 +9,7 @@ from app.database import get_db
 from app.dependencies.auth import get_current_user
 from app.models import Client, User
 from app.schemas.client import ClientCreate, ClientRead, ClientUpdate
+from app.services import audit_service
 
 router = APIRouter()
 
@@ -41,6 +42,13 @@ def create_client(
         created_by=current_user.id,
     )
     db.add(row)
+    db.flush()
+    audit_service.log(
+        db, user=current_user,
+        action="client.create",
+        entity_type="client", entity_id=str(row.id),
+        detail=f"name={row.name}",
+    )
     db.commit()
     db.refresh(row)
     return row
@@ -67,7 +75,7 @@ def update_client(
     client_id: str,
     payload: ClientUpdate,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     try:
         cid = uuid.UUID(client_id)
@@ -78,6 +86,12 @@ def update_client(
         raise HTTPException(status_code=404, detail="Client not found")
     for k, v in payload.model_dump(exclude_unset=True).items():
         setattr(row, k, v)
+    audit_service.log(
+        db, user=current_user,
+        action="client.update",
+        entity_type="client", entity_id=str(cid),
+        detail=str(list(payload.model_dump(exclude_unset=True).keys())),
+    )
     db.commit()
     db.refresh(row)
     return row

@@ -10,9 +10,11 @@ import Providers from './pages/Providers.tsx';
 import Products from './pages/Products.tsx';
 import Orders from './pages/Orders.tsx';
 import ShoppingLists from './pages/ShoppingLists.tsx';
+import PurchaseOrders from './pages/PurchaseOrders.tsx';
+import AuditLog from './pages/AuditLog.tsx';
 import './styles/globals.css';
 
-type Page = 'dashboard' | 'users' | 'clients' | 'providers' | 'products' | 'orders' | 'shopping-lists';
+type Page = 'dashboard' | 'users' | 'clients' | 'providers' | 'products' | 'orders' | 'shopping-lists' | 'purchase-orders' | 'audit-log';
 
 const PAGE_META: Record<Page, { title: string; sub: string }> = {
   dashboard:       { title: 'Dashboard',          sub: 'Overview and quick access' },
@@ -21,11 +23,13 @@ const PAGE_META: Record<Page, { title: string; sub: string }> = {
   providers:       { title: 'Provider management', sub: 'Create, edit and deactivate providers' },
   products:        { title: 'Product management', sub: 'Create, edit and manage product catalog' },
   orders:          { title: 'Orders',             sub: 'Create and manage customer orders' },
-  'shopping-lists': { title: 'Shopping lists',    sub: 'Aggregate confirmed orders and prepare daily procurement' },
+  'shopping-lists':  { title: 'Shopping lists',    sub: 'Aggregate confirmed orders and prepare daily procurement' },
+  'purchase-orders': { title: 'Purchase orders',   sub: 'Track and manage supplier purchase orders' },
+  'audit-log':       { title: 'Audit log',         sub: 'Track every action performed in the system' },
 };
 
 function isPage(value: string): value is Page {
-  return ['dashboard', 'users', 'clients', 'providers', 'products', 'orders', 'shopping-lists'].includes(value);
+  return ['dashboard', 'users', 'clients', 'providers', 'products', 'orders', 'shopping-lists', 'purchase-orders', 'audit-log'].includes(value);
 }
 
 export default function App() {
@@ -82,7 +86,9 @@ export default function App() {
             {safePage === 'providers' && <Providers toast={toast} />}
             {safePage === 'products'  && <Products toast={toast} />}
             {safePage === 'orders'         && <Orders toast={toast} />}
-            {safePage === 'shopping-lists' && <ShoppingLists toast={toast} />}
+            {safePage === 'shopping-lists'  && <ShoppingLists toast={toast} />}
+            {safePage === 'purchase-orders' && <PurchaseOrders toast={toast} />}
+            {safePage === 'audit-log'       && <AuditLog toast={toast} />}
           </div>
         </div>
       </div>

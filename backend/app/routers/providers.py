@@ -9,6 +9,7 @@ from app.database import get_db
 from app.dependencies.auth import get_current_user
 from app.models import Provider, User
 from app.schemas.provider import ProviderCreate, ProviderRead, ProviderUpdate
+from app.services import audit_service
 
 router = APIRouter()
 
@@ -42,6 +43,13 @@ def create_provider(
         created_by=current_user.id,
     )
     db.add(row)
+    db.flush()
+    audit_service.log(
+        db, user=current_user,
+        action="provider.create",
+        entity_type="provider", entity_id=str(row.id),
+        detail=f"name={row.name}",
+    )
     db.commit()
     db.refresh(row)
     return row
@@ -68,7 +76,7 @@ def update_provider(
     provider_id: str,
     payload: ProviderUpdate,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     try:
         pid = uuid.UUID(provider_id)
@@ -79,6 +87,12 @@ def update_provider(
         raise HTTPException(status_code=404, detail="Provider not found")
     for k, v in payload.model_dump(exclude_unset=True).items():
         setattr(row, k, v)
+    audit_service.log(
+        db, user=current_user,
+        action="provider.update",
+        entity_type="provider", entity_id=str(pid),
+        detail=str(list(payload.model_dump(exclude_unset=True).keys())),
+    )
     db.commit()
     db.refresh(row)
     return row

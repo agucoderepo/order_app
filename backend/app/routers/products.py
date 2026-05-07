@@ -14,6 +14,7 @@ from app.schemas.product import (
     ProductSearchResult,
     ProductUpdate,
 )
+from app.services import audit_service
 
 router = APIRouter()
 
@@ -74,8 +75,14 @@ def create_product(
         created_by=current_user.id,
     )
     db.add(row)
+    db.flush()
+    audit_service.log(
+        db, user=current_user,
+        action="product.create",
+        entity_type="product", entity_id=str(row.id),
+        detail=f"name={row.name}",
+    )
     db.commit()
-    db.refresh(row)
     return (
         db.query(Product)
         .options(joinedload(Product.provider))
@@ -110,7 +117,7 @@ def update_product(
     product_id: str,
     payload: ProductUpdate,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     try:
         pid = uuid.UUID(product_id)
@@ -121,6 +128,12 @@ def update_product(
         raise HTTPException(status_code=404, detail="Product not found")
     for k, v in payload.model_dump(exclude_unset=True).items():
         setattr(row, k, v)
+    audit_service.log(
+        db, user=current_user,
+        action="product.update",
+        entity_type="product", entity_id=str(pid),
+        detail=str(list(payload.model_dump(exclude_unset=True).keys())),
+    )
     db.commit()
     return (
         db.query(Product)

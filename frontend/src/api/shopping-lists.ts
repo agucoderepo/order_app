@@ -21,4 +21,9 @@ export const shoppingListsApi = {
     const res = await apiClient.patch<ShoppingListRead>(`/shopping-lists/${date}/finalize`);
     return res.data;
   },
+
+  reopen: async (date: string): Promise<ShoppingListRead> => {
+    const res = await apiClient.patch<ShoppingListRead>(`/shopping-lists/${date}/reopen`);
+    return res.data;
+  },
 };

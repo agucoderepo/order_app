@@ -107,6 +107,7 @@ class User(Base):
     shopping_lists  = relationship("ShoppingList", back_populates="created_by_user")
     purchase_orders = relationship("PurchaseOrder", back_populates="created_by_user")
     invoices        = relationship("Invoice", back_populates="created_by_user")
+    audit_logs      = relationship("AuditLog", back_populates="user")
 
     __table_args__ = (
         Index("idx_users_email", "email"),
@@ -560,3 +561,36 @@ class Invoice(Base):
     def __repr__(self):
         return (f"<Invoice id={self.id} number={self.invoice_number} "
                 f"status={self.status} total={self.total_amount}>")
+
+
+# ---------------------------------------------------------------------------
+# Audit Log
+# ---------------------------------------------------------------------------
+
+class AuditLog(Base):
+    """
+    Append-only record of every significant user action.
+    user_email is denormalised so history is preserved even after user deletion.
+    """
+    __tablename__ = "audit_logs"
+
+    id          = Column(UUID, primary_key=True, default=new_uuid)
+    user_id     = Column(UUID, ForeignKey("users.id"), nullable=False)
+    user_email  = Column(String(255), nullable=False)
+    action      = Column(String(100), nullable=False)   # e.g. "order.status_changed"
+    entity_type = Column(String(50),  nullable=True)    # e.g. "order"
+    entity_id   = Column(String(36),  nullable=True)    # UUID as string
+    detail      = Column(Text,        nullable=True)    # human-readable description
+    created_at  = Column(DateTime, nullable=False, server_default=func.now())
+
+    user = relationship("User", back_populates="audit_logs")
+
+    __table_args__ = (
+        Index("idx_audit_logs_user_id",     "user_id"),
+        Index("idx_audit_logs_action",      "action"),
+        Index("idx_audit_logs_entity_type", "entity_type"),
+        Index("idx_audit_logs_created_at",  "created_at"),
+    )
+
+    def __repr__(self):
+        return f"<AuditLog action={self.action} user={self.user_email}>"

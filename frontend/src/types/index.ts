@@ -249,6 +249,65 @@ export interface ShoppingListItemAdjust {
   notes?: string | null;
 }
 
+// ─── Purchase Orders ─────────────────────────────────────────────────────────
+
+export type PurchaseOrderStatus = 'pending' | 'sent' | 'received';
+
+export interface PurchaseOrderItemRead {
+  id: string;
+  product: ProductSummary;
+  quantity: string;
+  unit_price: string;
+  line_total: string;
+}
+
+export interface PurchaseOrderRead {
+  id: string;
+  shopping_list_id: string;
+  provider: ProviderSummary;
+  status: PurchaseOrderStatus;
+  pdf_path: string | null;
+  created_by: string;
+  created_at: string;
+  items: PurchaseOrderItemRead[];
+  total_amount: string;
+}
+
+export interface PurchaseOrderSummary {
+  id: string;
+  list_date: string;
+  provider: ProviderSummary;
+  status: PurchaseOrderStatus;
+  total_amount: string;
+  pdf_path: string | null;
+}
+
+export interface PurchaseOrderUpdate {
+  status?: PurchaseOrderStatus;
+}
+
+// ─── Audit Logs ──────────────────────────────────────────────────────────────
+
+export interface AuditLog {
+  id: string;
+  user_id: string;
+  user_email: string;
+  action: string;
+  entity_type: string | null;
+  entity_id: string | null;
+  detail: string | null;
+  created_at: string;
+}
+
+export interface AuditLogFilters {
+  entity_type?: string;
+  action?: string;
+  user_id?: string;
+  date_from?: string;
+  date_to?: string;
+  limit?: number;
+}
+
 // ─── API errors ──────────────────────────────────────────────────────────────
   
   export interface ApiError {

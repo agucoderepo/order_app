@@ -12,9 +12,23 @@ interface Props {
 export default function ShoppingListView({ list, onUpdated, toast }: Props) {
   const [adjustingItem, setAdjustingItem] = useState<ShoppingListItemRead | null>(null);
   const [finalizing, setFinalizing] = useState(false);
+  const [reopening, setReopening] = useState(false);
 
   const isFinalized = list.status === 'finalized';
   const grandTotal = list.by_provider.reduce((sum, g) => sum + parseFloat(g.subtotal), 0);
+
+  async function handleReopen() {
+    if (!confirm('Re-open this shopping list? All purchase orders for this day will be deleted.')) return;
+    setReopening(true);
+    try {
+      onUpdated(await shoppingListsApi.reopen(list.list_date));
+      toast('Shopping list re-opened');
+    } catch (err: any) {
+      toast(err.response?.data?.detail ?? 'Failed to re-open', 'error');
+    } finally {
+      setReopening(false);
+    }
+  }
 
   async function handleFinalize() {
     if (!confirm('Finalize this shopping list? This will lock it and generate purchase orders.')) return;
@@ -53,6 +67,11 @@ export default function ShoppingListView({ list, onUpdated, toast }: Props) {
               {finalizing ? <span className="spinner" /> : 'Finalize list'}
             </button>
           )}
+          {isFinalized && (
+            <button className="btn btn-ghost btn-sm" onClick={handleReopen} disabled={reopening}>
+              {reopening ? <span className="spinner" /> : 'Re-open list'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -88,7 +107,7 @@ export default function ShoppingListView({ list, onUpdated, toast }: Props) {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  {['Product', 'Unit', 'System qty', 'Adjusted qty', 'Final qty', 'Notes', ...(isFinalized ? [] : [''])].map((h) => (
+                  {['Product', 'Unit', 'Unit price', 'System qty', 'Adjusted qty', 'Final qty', 'Line total', 'Notes', ...(isFinalized ? [] : [''])].map((h) => (
                     <th key={h} style={thStyle}>{h}</th>
                   ))}
                 </tr>
@@ -96,6 +115,8 @@ export default function ShoppingListView({ list, onUpdated, toast }: Props) {
               <tbody>
                 {group.items.map((item) => {
                   const hasAdjustment = item.adjusted_quantity !== null;
+                  const unitPrice = Number(item.product.price);
+                  const lineTotal = parseFloat(item.final_quantity) * unitPrice;
                   return (
                     <tr key={item.id} style={{ borderTop: '1px solid var(--border)' }}>
                       <td style={tdStyle}>
@@ -103,6 +124,9 @@ export default function ShoppingListView({ list, onUpdated, toast }: Props) {
                       </td>
                       <td style={{ ...tdStyle, fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)' }}>
                         {item.product.unit}
+                      </td>
+                      <td style={{ ...tdStyle, fontFamily: 'var(--mono)', color: 'var(--muted)' }}>
+                        ${unitPrice.toFixed(2)}
                       </td>
                       <td style={{ ...tdStyle, fontFamily: 'var(--mono)' }}>
                         {item.total_quantity}
@@ -119,7 +143,10 @@ export default function ShoppingListView({ list, onUpdated, toast }: Props) {
                       <td style={{ ...tdStyle, fontFamily: 'var(--mono)', fontWeight: 700 }}>
                         {item.final_quantity}
                       </td>
-                      <td style={{ ...tdStyle, fontSize: 12, color: 'var(--muted)', maxWidth: 200 }}>
+                      <td style={{ ...tdStyle, fontFamily: 'var(--mono)', fontWeight: 700, color: 'var(--accent)' }}>
+                        ${lineTotal.toFixed(2)}
+                      </td>
+                      <td style={{ ...tdStyle, fontSize: 12, color: 'var(--muted)', maxWidth: 180 }}>
                         {item.notes || '—'}
                       </td>
                       {!isFinalized && (

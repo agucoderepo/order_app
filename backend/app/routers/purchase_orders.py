@@ -15,6 +15,7 @@ from app.schemas.purchase_order import (
     PurchaseOrderSummary,
     PurchaseOrderUpdate,
 )
+from app.services import audit_service
 
 router = APIRouter()
 
@@ -110,7 +111,7 @@ def update_purchase_order(
     po_id: str,
     payload: PurchaseOrderUpdate,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     try:
         pid = uuid.UUID(po_id)
@@ -119,7 +120,14 @@ def update_purchase_order(
     po = db.query(PurchaseOrder).filter(PurchaseOrder.id == pid).first()
     if not po:
         raise HTTPException(status_code=404, detail="Purchase order not found")
+    old_status = po.status
     if payload.status is not None:
         po.status = payload.status
+    audit_service.log(
+        db, user=current_user,
+        action="purchase_order.update",
+        entity_type="purchase_order", entity_id=str(pid),
+        detail=f"status={old_status}->{po.status}" if old_status != po.status else None,
+    )
     db.commit()
     return _po_detail(db, pid)
