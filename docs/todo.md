@@ -29,7 +29,7 @@ Based on current code in `frontend/src` and `backend/app`.
 - [x] Order capture/creation flow
 - [x] Client quick search/creation from order flow
 - [x] Product search and item entry flow
-- [ ] Restricted views for shopping/purchase/invoice modules (as required by business rules)
+- [x] Restricted views for shopping/purchase/invoice modules (shopping lists open to operators; purchase orders + invoices remain admin-only)
 
 ## Backend
 

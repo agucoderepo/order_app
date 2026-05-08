@@ -167,10 +167,8 @@ export default function OrderModal({ order, onClose, onSaved, toast }: Props) {
                     clients={clients}
                     value={clientId}
                     onChange={setClientId}
-                    onClientCreated={(c) => {
-                      setClients((prev) => [...prev, c]);
-                      setClientId(c.id);
-                    }}
+                    onClientCreated={(c) => setClients((prev) => [...prev, c])}
+                    toast={toast}
                   />
                 </div>
               )}

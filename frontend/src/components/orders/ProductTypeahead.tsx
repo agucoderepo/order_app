@@ -22,9 +22,9 @@ export default function ProductTypeahead({ products, value, onChange, disabled }
 
   useEffect(() => {
     function handle(e: MouseEvent) {
+      if (!document.contains(e.target as Node)) return;
       if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
         setOpen(false);
-        // Snap back to selected label if user typed but didn't pick
         const p = products.find((p) => p.id === value);
         setQuery(p ? `${p.name} (${p.unit})` : '');
       }
