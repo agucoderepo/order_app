@@ -17,7 +17,9 @@ def list_orders(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return order_service.list_orders(db, skip=skip, limit=limit)
+    # Operators only see orders they created; admins see all.
+    owner_id = current_user.id if current_user.role == "operator" else None
+    return order_service.list_orders(db, skip=skip, limit=limit, owner_id=owner_id)
 
 
 @router.post("/", response_model=OrderRead, status_code=status.HTTP_201_CREATED)
@@ -39,15 +41,10 @@ def create_order(
 
 @router.post("/parse-whatsapp")
 def parse_whatsapp(
-    body: dict,                               # { "text": "..." }
+    body: dict,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Parse a raw WhatsApp message and return a draft order for review.
-    Does NOT save anything — the frontend displays the draft and the
-    user confirms it via POST /orders/.
-    """
     return whatsapp_parser.parse_whatsapp_message(body["text"], db)
 
 
@@ -59,6 +56,9 @@ def update_order(
     current_user: User = Depends(get_current_user),
 ):
     order = order_service.get_order_or_404(db, order_id)
+    # Operators can only modify orders they created.
+    if current_user.role == "operator" and str(order.created_by) != str(current_user.id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
     old_status = order.status
     updated = order_service.update_order(db, order, payload)
     detail = f"status={old_status}->{updated.status}" if payload.status and old_status != updated.status else None

@@ -6,7 +6,7 @@ import type { Client, ClientCreate, ClientUpdate, ToastType } from '../../types'
 interface Props {
   client?: Client;
   onClose: () => void;
-  onSaved: () => void;
+  onSaved: (created?: Client) => void;
   toast: (msg: string, type?: ToastType) => void;
 }
 
@@ -46,8 +46,10 @@ export default function ClientModal({ client, onClose, onSaved, toast }: Props) 
           phone: form.phone.trim() || null,
           notes: form.notes.trim() || null,
         };
-        await clientsApi.create(body);
+        const created = await clientsApi.create(body);
         toast('Client created');
+        onSaved(created);
+        return;
       }
       onSaved();
     } catch (err: any) {

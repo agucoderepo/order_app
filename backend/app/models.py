@@ -58,8 +58,8 @@ class UUID(TypeDecorator):
         return value
 
 
-def new_uuid() -> str:
-    return str(uuid.uuid4())
+def new_uuid() -> uuid.UUID:
+    return uuid.uuid4()
 
 
 # ---------------------------------------------------------------------------
@@ -369,8 +369,9 @@ class OrderItem(Base):
 
 class ShoppingList(Base):
     """
-    One shopping list per working day. Aggregates all confirmed orders
-    into a single procurement view grouped by provider.
+    One shopping list per (working day, user). Each user (admin or operator)
+    has their own list for a date. Operators' lists aggregate only their own
+    confirmed orders; admins' lists aggregate all confirmed orders.
 
     status flow: open → finalized
     finalized_at is set when status transitions to 'finalized'.
@@ -378,7 +379,7 @@ class ShoppingList(Base):
     __tablename__ = "shopping_lists"
 
     id             = Column(UUID, primary_key=True, default=new_uuid)
-    list_date      = Column(Date, nullable=False, unique=True)
+    list_date      = Column(Date, nullable=False)
     status         = Column(String(50), nullable=False, default="open")
     created_by     = Column(UUID, ForeignKey("users.id"), nullable=False)
     finalized_at   = Column(DateTime, nullable=True)
@@ -392,6 +393,7 @@ class ShoppingList(Base):
     purchase_orders = relationship("PurchaseOrder", back_populates="shopping_list")
 
     __table_args__ = (
+        UniqueConstraint("list_date", "created_by", name="uq_shopping_list_date_user"),
         Index("idx_shopping_lists_list_date", "list_date"),
         Index("idx_shopping_lists_status", "status"),
     )

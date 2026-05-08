@@ -10,7 +10,10 @@ from app.models import (
 
 
 def get_or_create_shopping_list(list_date: date, user_id: str, db: Session) -> ShoppingList:
-    sl = db.query(ShoppingList).filter(ShoppingList.list_date == list_date).first()
+    sl = db.query(ShoppingList).filter(
+        ShoppingList.list_date == list_date,
+        ShoppingList.created_by == user_id,
+    ).first()
     if not sl:
         sl = ShoppingList(list_date=list_date, created_by=user_id)
         db.add(sl)
@@ -19,20 +22,26 @@ def get_or_create_shopping_list(list_date: date, user_id: str, db: Session) -> S
     return sl
 
 
-def aggregate_orders_into_list(list_date: date, user_id: str, db: Session) -> ShoppingList:
+def aggregate_orders_into_list(
+    list_date: date,
+    user_id: str,
+    db: Session,
+    *,
+    scope_to_owner: bool = False,
+) -> ShoppingList:
     """
-    Aggregate all confirmed orders for list_date into ShoppingListItems.
-    Replaces any existing items for that day (idempotent — safe to re-run).
+    Aggregate confirmed orders for list_date into ShoppingListItems for this user.
+
+    scope_to_owner=True  → only include orders created by user_id (operator mode).
+    scope_to_owner=False → include all confirmed orders for the date (admin mode).
     """
     sl = get_or_create_shopping_list(list_date, user_id, db)
 
-    # Delete existing items so we can recalculate cleanly
     db.query(ShoppingListItem).filter(
         ShoppingListItem.shopping_list_id == sl.id
     ).delete()
 
-    # Aggregate confirmed order_items for the day
-    rows = (
+    query = (
         db.query(
             Product.id.label("product_id"),
             Product.provider_id.label("provider_id"),
@@ -41,9 +50,11 @@ def aggregate_orders_into_list(list_date: date, user_id: str, db: Session) -> Sh
         .join(OrderItem, OrderItem.product_id == Product.id)
         .join(Order, Order.id == OrderItem.order_id)
         .filter(Order.order_date == list_date, Order.status == "confirmed")
-        .group_by(Product.id, Product.provider_id)
-        .all()
     )
+    if scope_to_owner:
+        query = query.filter(Order.created_by == user_id)
+
+    rows = query.group_by(Product.id, Product.provider_id).all()
 
     for row in rows:
         db.add(ShoppingListItem(
@@ -61,8 +72,6 @@ def aggregate_orders_into_list(list_date: date, user_id: str, db: Session) -> Sh
 def create_purchase_orders_for_list(sl: ShoppingList, user_id: str, db: Session) -> None:
     """
     Create one PurchaseOrder per provider from a finalized ShoppingList.
-    Each PO contains the items for that provider with final_quantity and
-    a snapshotted unit_price from the product at finalization time.
     Idempotent — skips providers that already have a PO for this list.
     """
     by_provider: dict = defaultdict(list)

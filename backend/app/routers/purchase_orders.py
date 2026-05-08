@@ -60,25 +60,39 @@ def _po_detail(db: Session, pid: uuid.UUID) -> PurchaseOrderRead:
     )
 
 
+def _assert_po_access(db: Session, po_id: uuid.UUID, user: User) -> None:
+    """Raise 403 if an operator tries to access a PO not from their own list."""
+    if user.role == "admin":
+        return
+    po = db.query(PurchaseOrder).filter(PurchaseOrder.id == po_id).first()
+    if not po:
+        return  # 404 handled by caller
+    sl = db.query(ShoppingList).filter(ShoppingList.id == po.shopping_list_id).first()
+    if not sl or str(sl.created_by) != str(user.id):
+        raise HTTPException(status_code=403, detail="Access denied")
+
+
 @router.get("/", response_model=list[PurchaseOrderSummary])
 def list_purchase_orders(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
-    rows = (
+    query = (
         db.query(PurchaseOrder)
         .options(
             joinedload(PurchaseOrder.shopping_list),
             joinedload(PurchaseOrder.provider),
             joinedload(PurchaseOrder.items),
         )
+        .join(ShoppingList, ShoppingList.id == PurchaseOrder.shopping_list_id)
         .order_by(PurchaseOrder.created_at.desc())
-        .offset(skip)
-        .limit(limit)
-        .all()
     )
+    # Operators only see POs from their own shopping lists.
+    if current_user.role == "operator":
+        query = query.filter(ShoppingList.created_by == current_user.id)
+    rows = query.offset(skip).limit(limit).all()
     return [
         PurchaseOrderSummary(
             id=po.id,
@@ -98,12 +112,13 @@ def list_purchase_orders(
 def get_purchase_order(
     po_id: str,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     try:
         pid = uuid.UUID(po_id)
     except ValueError:
         raise HTTPException(status_code=404, detail="Purchase order not found") from None
+    _assert_po_access(db, pid, current_user)
     return _po_detail(db, pid)
 
 
@@ -325,6 +340,7 @@ def update_purchase_order(
         pid = uuid.UUID(po_id)
     except ValueError:
         raise HTTPException(status_code=404, detail="Purchase order not found") from None
+    _assert_po_access(db, pid, current_user)
     po = db.query(PurchaseOrder).filter(PurchaseOrder.id == pid).first()
     if not po:
         raise HTTPException(status_code=404, detail="Purchase order not found")

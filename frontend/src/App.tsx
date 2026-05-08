@@ -82,7 +82,7 @@ export default function App() {
 
           {/* Page content */}
           <div style={{ padding: '28px 32px', flex: 1 }}>
-            {safePage === 'dashboard' && <Dashboard user={user} />}
+            {safePage === 'dashboard' && <Dashboard user={user} setPage={(p) => setPage(isPage(p) ? p : 'dashboard')} />}
             {safePage === 'users'     && <Users currentUser={user} toast={toast} />}
             {safePage === 'clients'   && <Clients toast={toast} />}
             {safePage === 'providers' && <Providers toast={toast} />}
