@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,7 +13,6 @@ from app.routers import shopping_lists, purchase_orders, invoices, audit_logs
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Create tables on startup (dev only — use Alembic in production)
     Base.metadata.create_all(bind=engine)
     yield
 
@@ -23,16 +23,23 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# CORS — allow dev server locally and any Railway/production origin via env var.
+# Set ALLOWED_ORIGINS=https://your-frontend.up.railway.app in the Railway backend service.
+_raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173")
+_allowed_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Vite dev server
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Serve generated PDFs as static files in development
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Serve static files only if the directory exists (dev PDF serving).
+_static_dir = "static"
+if os.path.isdir(_static_dir):
+    app.mount("/static", StaticFiles(directory=_static_dir), name="static")
 
 # Routers
 app.include_router(auth.router,           prefix="/auth",            tags=["auth"])
