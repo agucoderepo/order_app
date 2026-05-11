@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import type { LoginRequest } from '../types';
 
 interface Props {
@@ -6,11 +8,12 @@ interface Props {
 }
 
 export default function Login({ onLogin }: Props) {
+  const { t } = useTranslation();
   const [form, setForm]     = useState<LoginRequest>({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError]   = useState('');
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true); setError('');
     try {
@@ -18,8 +21,8 @@ export default function Login({ onLogin }: Props) {
     } catch (err: any) {
       const detail = err.response?.data?.detail;
       const msg = Array.isArray(detail)
-        ? 'Invalid email or password'
-        : (typeof detail === 'string' ? detail : err.message ?? 'Login failed');
+        ? t('login.invalid_credentials')
+        : (typeof detail === 'string' ? detail : err.message ?? t('login.login_failed'));
       setError(msg);
     } finally {
       setLoading(false);
@@ -36,33 +39,36 @@ export default function Login({ onLogin }: Props) {
         width: 380, padding: '40px 36px',
         background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16,
       }}>
-        <div style={{
-          fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--accent)',
-          letterSpacing: '.15em', textTransform: 'uppercase', marginBottom: 28,
-        }}>
-          Order Management System
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
+          <div style={{
+            fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--accent)',
+            letterSpacing: '.15em', textTransform: 'uppercase',
+          }}>
+            {t('login.system_name')}
+          </div>
+          <LanguageSwitcher />
         </div>
 
-        <div style={{ fontSize: 26, fontWeight: 800, marginBottom: 6 }}>Welcome back</div>
+        <div style={{ fontSize: 26, fontWeight: 800, marginBottom: 6 }}>{t('login.welcome')}</div>
         <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 32 }}>
-          Sign in to your account to continue
+          {t('login.subtitle')}
         </div>
 
         <form onSubmit={submit}>
           <div className="field">
-            <label>Email</label>
+            <label>{t('login.email')}</label>
             <input
               type="email"
               value={form.email}
               autoComplete="email"
-              placeholder="you@example.com"
+              placeholder={t('login.email_placeholder')}
               onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
               required
             />
           </div>
 
           <div className="field">
-            <label>Password</label>
+            <label>{t('login.password')}</label>
             <input
               type="password"
               value={form.password}
@@ -76,7 +82,7 @@ export default function Login({ onLogin }: Props) {
           {error && <div className="error-text">{error}</div>}
 
           <button className="btn btn-primary btn-full" type="submit" disabled={loading}>
-            {loading ? <span className="spinner" /> : 'Sign in'}
+            {loading ? <span className="spinner" /> : t('login.sign_in')}
           </button>
         </form>
       </div>

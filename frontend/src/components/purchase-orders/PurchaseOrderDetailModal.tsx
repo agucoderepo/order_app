@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import Modal from '../Modal';
 import { purchaseOrdersApi } from '../../api/purchase-orders';
 import type { PurchaseOrderRead, PurchaseOrderStatus, ToastType } from '../../types';
@@ -11,18 +12,6 @@ const STATUS_BADGE: Record<PurchaseOrderStatus, string> = {
   received: 'badge-delivered',
 };
 
-const STATUS_LABEL: Record<PurchaseOrderStatus, string> = {
-  pending:  'Pending',
-  sent:     'Sent',
-  received: 'Received',
-};
-
-const NEXT_ACTION: Record<PurchaseOrderStatus, string | null> = {
-  pending:  'Mark as sent',
-  sent:     'Mark as received',
-  received: null,
-};
-
 interface Props {
   poId: string;
   onClose: () => void;
@@ -31,13 +20,14 @@ interface Props {
 }
 
 export default function PurchaseOrderDetailModal({ poId, onClose, onUpdated, toast }: Props) {
+  const { t } = useTranslation();
   const [po, setPo] = useState<PurchaseOrderRead | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     purchaseOrdersApi.get(poId).then(setPo).catch(() => {
-      toast('Failed to load purchase order', 'error');
+      toast(t('purchase_orders.load_error_detail'), 'error');
       onClose();
     }).finally(() => setLoading(false));
   }, [poId]);
@@ -51,18 +41,24 @@ export default function PurchaseOrderDetailModal({ poId, onClose, onUpdated, toa
     try {
       const updated = await purchaseOrdersApi.update(po.id, { status: nextStatus });
       setPo(updated);
-      toast(`Purchase order marked as ${nextStatus}`);
+      toast(t('purchase_orders.toast_marked_as', { status: t(`status.${nextStatus}`) }));
       onUpdated();
     } catch (err: any) {
-      toast(err.response?.data?.detail ?? 'Failed to update status', 'error');
+      toast(err.response?.data?.detail ?? t('purchase_orders.update_status_error'), 'error');
     } finally {
       setUpdating(false);
     }
   }
 
+  function getNextActionLabel(status: PurchaseOrderStatus): string | null {
+    if (status === 'pending') return t('purchase_orders.mark_as_sent');
+    if (status === 'sent') return t('purchase_orders.mark_as_received');
+    return null;
+  }
+
   return (
     <Modal
-      title="Purchase order"
+      title={t('purchase_orders.modal_title')}
       subtitle={po ? `${po.provider.name} · ${po.provider.phone ?? ''}` : ''}
       onClose={onClose}
       width={620}
@@ -75,10 +71,10 @@ export default function PurchaseOrderDetailModal({ poId, onClose, onUpdated, toa
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <div style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'var(--mono)' }}>
-                Created {new Date(po.created_at).toLocaleDateString()}
+                {t('purchase_orders.created_on', { date: new Date(po.created_at).toLocaleDateString() })}
               </div>
               <span className={`badge ${STATUS_BADGE[po.status]}`}>
-                <span className="dot" />{STATUS_LABEL[po.status]}
+                <span className="dot" />{t(`status.${po.status}`)}
               </span>
             </div>
 
@@ -88,22 +84,22 @@ export default function PurchaseOrderDetailModal({ poId, onClose, onUpdated, toa
                 target="_blank"
                 rel="noreferrer"
                 className="btn btn-ghost btn-sm"
-                title="Clean version for the provider"
+                title={t('purchase_orders.print_for_provider')}
               >
-                Print for provider
+                {t('purchase_orders.print_for_provider')}
               </a>
               <a
                 href={`/api/purchase-orders/${po.id}/print-breakdown?token=${localStorage.getItem('access_token') ?? ''}`}
                 target="_blank"
                 rel="noreferrer"
                 className="btn btn-ghost btn-sm"
-                title="Includes per-client quantity breakdown — for internal use"
+                title={t('purchase_orders.print_with_breakdown')}
               >
-                Print w/ breakdown
+                {t('purchase_orders.print_with_breakdown')}
               </a>
-              {NEXT_ACTION[po.status] && (
+              {getNextActionLabel(po.status) && (
                 <button className="btn btn-primary btn-sm" onClick={advanceStatus} disabled={updating}>
-                  {updating ? <span className="spinner" /> : NEXT_ACTION[po.status]}
+                  {updating ? <span className="spinner" /> : getNextActionLabel(po.status)}
                 </button>
               )}
             </div>
@@ -113,7 +109,13 @@ export default function PurchaseOrderDetailModal({ poId, onClose, onUpdated, toa
           <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 16 }}>
             <thead>
               <tr>
-                {['Product', 'Unit', 'Qty', 'Unit price', 'Line total'].map((h) => (
+                {[
+                  t('purchase_orders.col_product'),
+                  t('purchase_orders.col_unit'),
+                  t('purchase_orders.col_qty'),
+                  t('purchase_orders.col_unit_price'),
+                  t('purchase_orders.col_line_total'),
+                ].map((h) => (
                   <th key={h} style={thStyle}>{h}</th>
                 ))}
               </tr>
@@ -133,7 +135,7 @@ export default function PurchaseOrderDetailModal({ poId, onClose, onUpdated, toa
 
           {/* Total */}
           <div style={{ textAlign: 'right', fontFamily: 'var(--mono)', fontSize: 14, borderTop: '1px solid var(--border)', paddingTop: 12 }}>
-            Total:{' '}
+            {t('common.total')}:{' '}
             <span style={{ fontWeight: 800, fontSize: 16, color: 'var(--accent)' }}>
               ${Number(po.total_amount).toFixed(2)}
             </span>

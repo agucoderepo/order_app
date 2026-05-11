@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { purchaseOrdersApi } from '../api/purchase-orders';
 import PurchaseOrderDetailModal from '../components/purchase-orders/PurchaseOrderDetailModal';
 import type { PurchaseOrderSummary, PurchaseOrderStatus, ToastType } from '../types';
@@ -9,12 +10,7 @@ interface Props {
 
 type StatusFilter = PurchaseOrderStatus | 'all';
 
-const STATUS_FILTERS: { label: string; value: StatusFilter }[] = [
-  { label: 'All',      value: 'all' },
-  { label: 'Pending',  value: 'pending' },
-  { label: 'Sent',     value: 'sent' },
-  { label: 'Received', value: 'received' },
-];
+const STATUS_VALUES: StatusFilter[] = ['all', 'pending', 'sent', 'received'];
 
 const STATUS_BADGE: Record<PurchaseOrderStatus, string> = {
   pending:  'badge-operator',
@@ -23,6 +19,7 @@ const STATUS_BADGE: Record<PurchaseOrderStatus, string> = {
 };
 
 export default function PurchaseOrders({ toast }: Props) {
+  const { t } = useTranslation();
   const [pos, setPos] = useState<PurchaseOrderSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -34,11 +31,11 @@ export default function PurchaseOrders({ toast }: Props) {
     try {
       setPos(await purchaseOrdersApi.list());
     } catch (e: any) {
-      toast(e.response?.data?.detail ?? 'Failed to load purchase orders', 'error');
+      toast(e.response?.data?.detail ?? t('purchase_orders.load_error'), 'error');
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, t]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -59,16 +56,17 @@ export default function PurchaseOrders({ toast }: Props) {
     received: pos.filter((p) => p.status === 'received').length,
   };
 
+  const stats = [
+    { label: t('purchase_orders.stats_total'), value: counts.all,      color: 'var(--accent)' },
+    { label: t('status.pending'),              value: counts.pending,  color: 'var(--muted)' },
+    { label: t('status.sent'),                 value: counts.sent,     color: 'var(--accent2)' },
+    { label: t('status.received'),             value: counts.received, color: 'var(--accent)' },
+  ];
+
   return (
     <>
-      {/* Stats */}
       <div className="stat-grid-4">
-        {[
-          { label: 'Total',    value: counts.all,      color: 'var(--accent)' },
-          { label: 'Pending',  value: counts.pending,  color: 'var(--muted)' },
-          { label: 'Sent',     value: counts.sent,     color: 'var(--accent2)' },
-          { label: 'Received', value: counts.received, color: 'var(--accent)' },
-        ].map((s) => (
+        {stats.map((s) => (
           <div key={s.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px 22px' }}>
             <div style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--muted)', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>{s.label}</div>
             <div style={{ fontSize: 30, fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.value}</div>
@@ -77,19 +75,18 @@ export default function PurchaseOrders({ toast }: Props) {
       </div>
 
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
-        {/* Toolbar */}
         <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', gap: 4 }}>
-            {STATUS_FILTERS.map((f) => (
+            {STATUS_VALUES.map((v) => (
               <button
-                key={f.value}
-                onClick={() => setStatusFilter(f.value)}
-                className={statusFilter === f.value ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm'}
+                key={v}
+                onClick={() => setStatusFilter(v)}
+                className={statusFilter === v ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm'}
                 style={{ fontSize: 12 }}
               >
-                {f.label}
+                {v === 'all' ? t('common.all') : t(`status.${v}`)}
                 <span style={{ marginLeft: 6, opacity: 0.7, fontFamily: 'var(--mono)', fontSize: 11 }}>
-                  {counts[f.value]}
+                  {counts[v]}
                 </span>
               </button>
             ))}
@@ -97,7 +94,7 @@ export default function PurchaseOrders({ toast }: Props) {
           <input
             className="toolbar-search"
             style={{ width: 220 }}
-            placeholder="Search provider or date..."
+            placeholder={t('purchase_orders.search_placeholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -106,12 +103,19 @@ export default function PurchaseOrders({ toast }: Props) {
         {loading ? (
           <div style={{ padding: '48px 20px', textAlign: 'center' }}><span className="spinner" /></div>
         ) : filtered.length === 0 ? (
-          <div style={{ padding: '24px 20px', color: 'var(--muted)' }}>No purchase orders found.</div>
+          <div style={{ padding: '24px 20px', color: 'var(--muted)' }}>{t('purchase_orders.empty')}</div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                {['Date', 'Provider', 'Items value', 'Status', 'PDF', ''].map((h) => (
+                {[
+                  t('purchase_orders.col_date'),
+                  t('purchase_orders.col_provider'),
+                  t('purchase_orders.col_items_value'),
+                  t('purchase_orders.col_status'),
+                  t('purchase_orders.col_pdf'),
+                  '',
+                ].map((h) => (
                   <th key={h} style={thStyle}>{h}</th>
                 ))}
               </tr>
@@ -119,36 +123,28 @@ export default function PurchaseOrders({ toast }: Props) {
             <tbody>
               {filtered.map((po) => (
                 <tr key={po.id} style={{ borderTop: '1px solid var(--border)' }}>
-                  <td style={{ ...tdStyle, fontFamily: 'var(--mono)', fontSize: 12, whiteSpace: 'nowrap' }}>
-                    {po.list_date}
-                  </td>
+                  <td style={{ ...tdStyle, fontFamily: 'var(--mono)', fontSize: 12, whiteSpace: 'nowrap' }}>{po.list_date}</td>
                   <td style={tdStyle}>
                     <div style={{ fontWeight: 700 }}>{po.provider.name}</div>
                     {po.provider.phone && (
                       <div style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--mono)', marginTop: 2 }}>{po.provider.phone}</div>
                     )}
                   </td>
-                  <td style={{ ...tdStyle, fontFamily: 'var(--mono)', fontWeight: 700 }}>
-                    ${Number(po.total_amount).toFixed(2)}
-                  </td>
+                  <td style={{ ...tdStyle, fontFamily: 'var(--mono)', fontWeight: 700 }}>${Number(po.total_amount).toFixed(2)}</td>
                   <td style={tdStyle}>
                     <span className={`badge ${STATUS_BADGE[po.status]}`}>
-                      <span className="dot" />{po.status}
+                      <span className="dot" />{t(`status.${po.status}`)}
                     </span>
                   </td>
                   <td style={tdStyle}>
                     {po.pdf_path ? (
-                      <a href={po.pdf_path} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm">
-                        ↓ PDF
-                      </a>
+                      <a href={po.pdf_path} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm">↓ PDF</a>
                     ) : (
                       <span style={{ color: 'var(--muted)', fontSize: 12 }}>—</span>
                     )}
                   </td>
                   <td style={tdStyle}>
-                    <button className="btn btn-ghost btn-sm" onClick={() => setDetailId(po.id)}>
-                      View
-                    </button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => setDetailId(po.id)}>{t('common.view')}</button>
                   </td>
                 </tr>
               ))}
@@ -158,12 +154,7 @@ export default function PurchaseOrders({ toast }: Props) {
       </div>
 
       {detailId && (
-        <PurchaseOrderDetailModal
-          poId={detailId}
-          toast={toast}
-          onClose={() => setDetailId(null)}
-          onUpdated={load}
-        />
+        <PurchaseOrderDetailModal poId={detailId} toast={toast} onClose={() => setDetailId(null)} onUpdated={load} />
       )}
     </>
   );

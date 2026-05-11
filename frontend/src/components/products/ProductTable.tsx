@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { Product } from '../../types';
 
 interface Props {
@@ -7,20 +8,22 @@ interface Props {
 }
 
 export default function ProductTable({ products, onEdit, onDeactivate }: Props) {
+  const { t } = useTranslation();
+
   if (!products.length) {
-    return <div style={{ padding: '24px 20px', color: 'var(--muted)' }}>No products found.</div>;
+    return <div style={{ padding: '24px 20px', color: 'var(--muted)' }}>{t('products.empty')}</div>;
   }
 
   return (
     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
       <thead>
         <tr>
-          <th style={headerCellStyle}>Name</th>
-          <th style={headerCellStyle}>Provider</th>
-          <th style={headerCellStyle}>Unit</th>
-          <th style={headerCellStyle}>Price</th>
-          <th style={headerCellStyle}>Status</th>
-          <th style={headerCellStyle}>Actions</th>
+          <th style={headerCellStyle}>{t('products.col_name')}</th>
+          <th style={headerCellStyle}>{t('products.col_provider')}</th>
+          <th style={headerCellStyle}>{t('products.col_unit')}</th>
+          <th style={headerCellStyle}>{t('products.col_price')}</th>
+          <th style={headerCellStyle}>{t('products.col_status')}</th>
+          <th style={headerCellStyle}>{t('products.col_actions')}</th>
         </tr>
       </thead>
       <tbody>
@@ -31,20 +34,18 @@ export default function ProductTable({ products, onEdit, onDeactivate }: Props) 
             </td>
             <td style={cellStyle}>{p.provider.name}</td>
             <td style={{ ...cellStyle, fontFamily: 'var(--mono)', fontSize: 12 }}>{p.unit}</td>
-            <td style={{ ...cellStyle, fontFamily: 'var(--mono)' }}>
-              ${Number(p.price).toFixed(2)}
-            </td>
+            <td style={{ ...cellStyle, fontFamily: 'var(--mono)' }}>${Number(p.price).toFixed(2)}</td>
             <td style={cellStyle}>
               <span className={`badge ${p.is_active ? 'badge-admin' : 'badge-operator'}`}>
                 <span className="dot" />
-                {p.is_active ? 'active' : 'inactive'}
+                {p.is_active ? t('common.active') : t('common.inactive')}
               </span>
             </td>
             <td style={cellStyle}>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button className="btn btn-ghost btn-sm" onClick={() => onEdit(p)}>Edit</button>
+                <button className="btn btn-ghost btn-sm" onClick={() => onEdit(p)}>{t('common.edit')}</button>
                 {p.is_active && (
-                  <button className="btn btn-danger btn-sm" onClick={() => onDeactivate(p)}>Deactivate</button>
+                  <button className="btn btn-danger btn-sm" onClick={() => onDeactivate(p)}>{t('common.deactivate')}</button>
                 )}
               </div>
             </td>
