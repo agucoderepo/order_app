@@ -57,7 +57,7 @@ export default function ShoppingLists({ toast }: Props) {
   return (
     <>
       {/* Date selector card */}
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '16px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '16px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <label style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>List date</label>
         <input
           type="date"

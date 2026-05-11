@@ -45,7 +45,7 @@ export default function AuditLog({ toast }: Props) {
       {/* Filter bar */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 20 }}>
         <select
-          className="input"
+          className="toolbar-search"
           style={{ width: 190 }}
           value={filters.action ?? ''}
           onChange={(e) => setFilter('action', e.target.value)}
@@ -54,7 +54,7 @@ export default function AuditLog({ toast }: Props) {
         </select>
 
         <select
-          className="input"
+          className="toolbar-search"
           style={{ width: 170 }}
           value={filters.entity_type ?? ''}
           onChange={(e) => setFilter('entity_type', e.target.value)}
@@ -63,7 +63,7 @@ export default function AuditLog({ toast }: Props) {
         </select>
 
         <input
-          className="input"
+          className="toolbar-search"
           style={{ width: 140 }}
           type="date"
           value={filters.date_from ?? ''}
@@ -72,7 +72,7 @@ export default function AuditLog({ toast }: Props) {
           title="From date"
         />
         <input
-          className="input"
+          className="toolbar-search"
           style={{ width: 140 }}
           type="date"
           value={filters.date_to ?? ''}

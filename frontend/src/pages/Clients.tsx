@@ -49,7 +49,7 @@ export default function Clients({ toast }: Props) {
 
   return (
     <>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
+      <div className="stat-grid">
         {[
           { label: 'Total clients', value: clients.length, color: 'var(--accent)' },
           { label: 'Active', value: active, color: 'var(--accent2)' },
@@ -102,17 +102,8 @@ export default function Clients({ toast }: Props) {
           <div style={{ fontSize: 14, fontWeight: 700 }}>All clients</div>
           <div style={{ display: 'flex', gap: 10 }}>
             <input
-              style={{
-                background: 'var(--bg)',
-                border: '1px solid var(--border)',
-                borderRadius: 8,
-                padding: '8px 12px',
-                color: 'var(--text)',
-                fontFamily: 'var(--sans)',
-                fontSize: 13,
-                outline: 'none',
-                width: 220,
-              }}
+              className="toolbar-search"
+              style={{ width: 220 }}
               placeholder="Search name, address or phone..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}

@@ -21,13 +21,15 @@ interface Props {
   setPage: (p: string) => void;
   user: User | null;
   onLogout: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export default function Sidebar({ page, setPage, user, onLogout }: Props) {
+export default function Sidebar({ page, setPage, user, onLogout, isOpen }: Props) {
   const visibleNav = NAV.filter((n) => !n.adminOnly || user?.role === 'admin');
 
   return (
-    <aside style={{
+    <aside className={`sidebar${isOpen ? ' sidebar-open' : ''}`} style={{
       width: 220, flexShrink: 0,
       background: 'var(--surface)', borderRight: '1px solid var(--border)',
       display: 'flex', flexDirection: 'column', padding: '24px 0',

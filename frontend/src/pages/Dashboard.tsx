@@ -67,7 +67,7 @@ export default function Dashboard({ user, setPage }: Props) {
     return (
       <div>
         {/* Stat cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+        <div className="stat-grid" style={{ marginBottom: 24 }}>
           <div style={CARD}>
             <div style={LABEL}>Today's orders</div>
             <div style={{ fontSize: 36, fontWeight: 800 }}>
@@ -169,7 +169,7 @@ export default function Dashboard({ user, setPage }: Props) {
             <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
               <div style={{ fontSize: 14, fontWeight: 700 }}>Today's breakdown</div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+            <div className="breakdown-grid">
               {[
                 { label: 'Draft',     count: draftToday,     color: 'var(--warning)' },
                 { label: 'Confirmed', count: confirmedToday, color: 'var(--accent)'  },
@@ -194,7 +194,7 @@ export default function Dashboard({ user, setPage }: Props) {
   return (
     <div>
       {/* Info cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+      <div className="stat-grid" style={{ marginBottom: 24 }}>
         <div style={CARD}>
           <div style={LABEL}>Signed in as</div>
           <div style={{ fontSize: 16, fontWeight: 800 }}>{user?.name ?? '—'}</div>
@@ -218,7 +218,7 @@ export default function Dashboard({ user, setPage }: Props) {
           <div style={{ fontSize: 14, fontWeight: 700 }}>Today's orders</div>
           <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2, fontFamily: 'var(--mono)' }}>{today}</div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+        <div className="breakdown-grid-4">
           {[
             { label: 'Total',     value: loadingOrders ? '…' : String(todayOrders.length),    color: 'var(--text)'    },
             { label: 'Draft',     value: loadingOrders ? '…' : String(draftToday),            color: 'var(--warning)' },
