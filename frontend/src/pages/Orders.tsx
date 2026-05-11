@@ -56,7 +56,7 @@ export default function Orders({ toast }: Props) {
 
   return (
     <>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 28 }}>
+      <div className="stat-grid-4">
         {[
           { label: 'Total orders', value: counts.all,      color: 'var(--accent)' },
           { label: 'Draft',        value: counts.draft,     color: 'var(--muted)' },
@@ -97,17 +97,8 @@ export default function Orders({ toast }: Props) {
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <input
-              style={{
-                background: 'var(--bg)',
-                border: '1px solid var(--border)',
-                borderRadius: 8,
-                padding: '8px 12px',
-                color: 'var(--text)',
-                fontFamily: 'var(--sans)',
-                fontSize: 13,
-                outline: 'none',
-                width: 220,
-              }}
+              className="toolbar-search"
+              style={{ width: 220 }}
               placeholder="Search by client..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}

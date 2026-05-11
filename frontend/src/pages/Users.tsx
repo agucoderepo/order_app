@@ -49,7 +49,7 @@ export default function Users({ currentUser, toast }: Props) {
 
   return (
     <>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
+      <div className="stat-grid">
         {[
           { label: 'Total users', value: users.length, color: 'var(--accent)' },
           { label: 'Admins / Operators', value: `${admins} / ${operators}`, color: 'var(--accent2)' },
@@ -102,17 +102,8 @@ export default function Users({ currentUser, toast }: Props) {
           <div style={{ fontSize: 14, fontWeight: 700 }}>All users</div>
           <div style={{ display: 'flex', gap: 10 }}>
             <input
-              style={{
-                background: 'var(--bg)',
-                border: '1px solid var(--border)',
-                borderRadius: 8,
-                padding: '8px 12px',
-                color: 'var(--text)',
-                fontFamily: 'var(--sans)',
-                fontSize: 13,
-                outline: 'none',
-                width: 200,
-              }}
+              className="toolbar-search"
+              style={{ width: 200 }}
               placeholder="Search name or email…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}

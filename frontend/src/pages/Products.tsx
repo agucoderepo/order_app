@@ -56,7 +56,7 @@ export default function Products({ toast }: Props) {
 
   return (
     <>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
+      <div className="stat-grid">
         {[
           { label: 'Total products', value: products.length, color: 'var(--accent)' },
           { label: 'Active', value: active, color: 'var(--accent2)' },
@@ -85,17 +85,8 @@ export default function Products({ toast }: Props) {
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
             <input
               ref={searchRef}
-              style={{
-                background: 'var(--bg)',
-                border: '1px solid var(--border)',
-                borderRadius: 8,
-                padding: '8px 12px',
-                color: 'var(--text)',
-                fontFamily: 'var(--sans)',
-                fontSize: 13,
-                outline: 'none',
-                width: 240,
-              }}
+              className="toolbar-search"
+              style={{ width: 240 }}
               placeholder="Search name, unit or provider..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}

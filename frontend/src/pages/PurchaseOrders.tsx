@@ -62,7 +62,7 @@ export default function PurchaseOrders({ toast }: Props) {
   return (
     <>
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 28 }}>
+      <div className="stat-grid-4">
         {[
           { label: 'Total',    value: counts.all,      color: 'var(--accent)' },
           { label: 'Pending',  value: counts.pending,  color: 'var(--muted)' },
@@ -95,7 +95,8 @@ export default function PurchaseOrders({ toast }: Props) {
             ))}
           </div>
           <input
-            style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 13, outline: 'none', width: 220 }}
+            className="toolbar-search"
+            style={{ width: 220 }}
             placeholder="Search provider or date..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}

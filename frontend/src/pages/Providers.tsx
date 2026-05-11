@@ -50,7 +50,7 @@ export default function Providers({ toast }: Props) {
 
   return (
     <>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
+      <div className="stat-grid">
         {[
           { label: 'Total providers', value: providers.length, color: 'var(--accent)' },
           { label: 'Active', value: active, color: 'var(--accent2)' },
@@ -103,17 +103,8 @@ export default function Providers({ toast }: Props) {
           <div style={{ fontSize: 14, fontWeight: 700 }}>All providers</div>
           <div style={{ display: 'flex', gap: 10 }}>
             <input
-              style={{
-                background: 'var(--bg)',
-                border: '1px solid var(--border)',
-                borderRadius: 8,
-                padding: '8px 12px',
-                color: 'var(--text)',
-                fontFamily: 'var(--sans)',
-                fontSize: 13,
-                outline: 'none',
-                width: 260,
-              }}
+              className="toolbar-search"
+              style={{ width: 260 }}
               placeholder="Search name, contact or phone..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}

@@ -38,6 +38,7 @@ export default function App() {
   const { user, authed, loading, login, logout } = useAuth();
   const { toasts, add: toast } = useToast();
   const [page, setPage] = useState<Page>('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Still resolving token → show nothing (avoids flash)
   if (loading) {
@@ -65,23 +66,33 @@ export default function App() {
       <div style={{ display: 'flex', minHeight: '100vh' }}>
         <Sidebar
           page={safePage}
-          setPage={(p) => setPage(isPage(p) ? p : 'dashboard')}
+          setPage={(p) => { setPage(isPage(p) ? p : 'dashboard'); setSidebarOpen(false); }}
           user={user}
           onLogout={logout}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
         />
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh', overflow: 'auto' }}>
           {/* Topbar */}
-          <div style={{
+          <div className="topbar" style={{
             padding: '20px 32px', borderBottom: '1px solid var(--border)',
             position: 'sticky', top: 0, background: 'var(--bg)', zIndex: 10,
+            display: 'flex', alignItems: 'center', gap: 12,
           }}>
-            <div style={{ fontSize: 20, fontWeight: 800 }}>{meta.title}</div>
-            <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2, fontFamily: 'var(--mono)' }}>{meta.sub}</div>
+            <button
+              className="topbar-hamburger"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open menu"
+            >☰</button>
+            <div>
+              <div style={{ fontSize: 20, fontWeight: 800 }}>{meta.title}</div>
+              <div className="topbar-sub" style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2, fontFamily: 'var(--mono)' }}>{meta.sub}</div>
+            </div>
           </div>
 
           {/* Page content */}
-          <div style={{ padding: '28px 32px', flex: 1 }}>
+          <div className="page-content" style={{ padding: '28px 32px', flex: 1 }}>
             {safePage === 'dashboard' && <Dashboard user={user} setPage={(p) => setPage(isPage(p) ? p : 'dashboard')} />}
             {safePage === 'users'     && <Users currentUser={user} toast={toast} />}
             {safePage === 'clients'   && <Clients toast={toast} />}
@@ -95,6 +106,12 @@ export default function App() {
           </div>
         </div>
       </div>
+
+      {/* Mobile sidebar overlay */}
+      <div
+        className={`sidebar-overlay${sidebarOpen ? ' sidebar-open' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      />
 
       <Toast toasts={toasts} />
     </>
