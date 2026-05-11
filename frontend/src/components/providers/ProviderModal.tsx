@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Modal from '../Modal';
 import { providersApi } from '../../api/providers';
 import type { Provider, ProviderCreate, ProviderUpdate, ToastType } from '../../types';
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function ProviderModal({ provider, onClose, onSaved, toast }: Props) {
+  const { t } = useTranslation();
   const editing = !!provider?.id;
   const [form, setForm] = useState({
     name: provider?.name ?? '',
@@ -26,7 +28,7 @@ export default function ProviderModal({ provider, onClose, onSaved, toast }: Pro
     setForm((p) => ({ ...p, [k]: v }));
   }
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -40,7 +42,7 @@ export default function ProviderModal({ provider, onClose, onSaved, toast }: Pro
           notes: form.notes.trim() || null,
         };
         await providersApi.update(provider!.id, body);
-        toast('Provider updated');
+        toast(t('providers.toast_updated'));
       } else {
         const body: ProviderCreate = {
           name: form.name.trim(),
@@ -50,62 +52,45 @@ export default function ProviderModal({ provider, onClose, onSaved, toast }: Pro
           notes: form.notes.trim() || null,
         };
         await providersApi.create(body);
-        toast('Provider created');
+        toast(t('providers.toast_created'));
       }
       onSaved();
     } catch (err: any) {
-      setError(err.response?.data?.detail ?? err.message ?? 'Something went wrong');
+      setError(err.response?.data?.detail ?? err.message ?? t('common.something_went_wrong'));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <Modal title={editing ? 'Edit provider' : 'New provider'} subtitle="Provider contact details" onClose={onClose}>
+    <Modal title={editing ? t('providers.modal_title_edit') : t('providers.modal_title_new')} subtitle={t('providers.modal_sub')} onClose={onClose}>
       <form onSubmit={submit}>
         <div className="field">
-          <label>Name</label>
-          <input
-            value={form.name}
-            onChange={(e) => set('name', e.target.value)}
-            placeholder="Distribuidora XYZ"
-            required
-          />
+          <label>{t('providers.field_name')}</label>
+          <input value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Distribuidora XYZ" required />
         </div>
 
         <div className="field">
-          <label>Contact name</label>
-          <input
-            value={form.contact_name}
-            onChange={(e) => set('contact_name', e.target.value)}
-            placeholder="Juan García"
-          />
+          <label>{t('providers.field_contact_name')}</label>
+          <input value={form.contact_name} onChange={(e) => set('contact_name', e.target.value)} placeholder="Juan García" />
         </div>
 
         <div className="field">
-          <label>Phone</label>
-          <input
-            value={form.phone}
-            onChange={(e) => set('phone', e.target.value)}
-            placeholder="+54 11 5555 1234"
-          />
+          <label>{t('providers.field_phone')}</label>
+          <input value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="+54 11 5555 1234" />
         </div>
 
         <div className="field">
-          <label>Address</label>
-          <input
-            value={form.address}
-            onChange={(e) => set('address', e.target.value)}
-            placeholder="Street, number, city"
-          />
+          <label>{t('providers.field_address')}</label>
+          <input value={form.address} onChange={(e) => set('address', e.target.value)} placeholder="Street, number, city" />
         </div>
 
         <div className="field">
-          <label>Notes</label>
+          <label>{t('providers.field_notes')}</label>
           <textarea
             value={form.notes}
             onChange={(e) => set('notes', e.target.value)}
-            placeholder="Delivery days, minimum order, payment terms..."
+            placeholder={t('providers.notes_placeholder')}
             rows={3}
             style={{ resize: 'vertical' }}
           />
@@ -114,11 +99,9 @@ export default function ProviderModal({ provider, onClose, onSaved, toast }: Pro
         {error && <div className="error-text">{error}</div>}
 
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 24 }}>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>
-            Cancel
-          </button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>{t('common.cancel')}</button>
           <button type="submit" className="btn btn-primary btn-sm" disabled={loading}>
-            {loading ? <span className="spinner" /> : editing ? 'Save changes' : 'Create provider'}
+            {loading ? <span className="spinner" /> : editing ? t('providers.save_button') : t('providers.create_button')}
           </button>
         </div>
       </form>

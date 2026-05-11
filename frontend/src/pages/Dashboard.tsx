@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { User, OrderRead } from '../types';
 import { ordersApi } from '../api/orders';
 
@@ -41,6 +42,7 @@ const TH: React.CSSProperties = {
 };
 
 export default function Dashboard({ user, setPage }: Props) {
+  const { t } = useTranslation();
   const [orders, setOrders] = useState<OrderRead[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
 
@@ -69,7 +71,7 @@ export default function Dashboard({ user, setPage }: Props) {
         {/* Stat cards */}
         <div className="stat-grid" style={{ marginBottom: 24 }}>
           <div style={CARD}>
-            <div style={LABEL}>Today's orders</div>
+            <div style={LABEL}>{t('dashboard.today_orders')}</div>
             <div style={{ fontSize: 36, fontWeight: 800 }}>
               {loadingOrders ? <span className="spinner" /> : todayOrders.length}
             </div>
@@ -77,22 +79,24 @@ export default function Dashboard({ user, setPage }: Props) {
           </div>
 
           <div style={CARD}>
-            <div style={LABEL}>Pending (draft)</div>
+            <div style={LABEL}>{t('dashboard.pending_draft')}</div>
             <div style={{ fontSize: 36, fontWeight: 800, color: draftOrders.length > 0 ? 'var(--warning)' : 'var(--accent)' }}>
               {loadingOrders ? <span className="spinner" /> : draftOrders.length}
             </div>
             <div style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--muted)', marginTop: 6 }}>
-              {draftOrders.length === 1 ? 'order needs confirmation' : 'orders need confirmation'}
+              {t('dashboard.needs_confirmation', { count: draftOrders.length })}
             </div>
           </div>
 
           <div style={CARD}>
-            <div style={LABEL}>Confirmed today</div>
+            <div style={LABEL}>{t('dashboard.confirmed_today')}</div>
             <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--accent)' }}>
               {loadingOrders ? <span className="spinner" /> : confirmedToday}
             </div>
             <div style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--muted)', marginTop: 6 }}>
-              {confirmedToday > 0 ? `$${todayRevenue.toFixed(2)} total value` : 'none yet today'}
+              {confirmedToday > 0
+                ? t('dashboard.total_value', { amount: todayRevenue.toFixed(2) })
+                : t('dashboard.none_yet_today')}
             </div>
           </div>
         </div>
@@ -101,14 +105,14 @@ export default function Dashboard({ user, setPage }: Props) {
         <div style={{ ...CARD, padding: 0, marginBottom: 20 }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700 }}>Pending actions</div>
+              <div style={{ fontSize: 14, fontWeight: 700 }}>{t('dashboard.pending_actions')}</div>
               <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2, fontFamily: 'var(--mono)' }}>
-                Draft orders awaiting confirmation
+                {t('dashboard.draft_awaiting')}
               </div>
             </div>
             {setPage && (
               <button className="btn btn-ghost btn-sm" onClick={() => setPage('orders')}>
-                All orders →
+                {t('dashboard.all_orders')}
               </button>
             )}
           </div>
@@ -117,16 +121,16 @@ export default function Dashboard({ user, setPage }: Props) {
             <div style={{ padding: 24, textAlign: 'center' }}><span className="spinner" /></div>
           ) : draftOrders.length === 0 ? (
             <div style={{ padding: 24, textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--mono)', fontSize: 13 }}>
-              No pending orders — all caught up
+              {t('dashboard.no_pending')}
             </div>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  <th style={TH}>Client</th>
-                  <th style={TH}>Date</th>
-                  <th style={{ ...TH, textAlign: 'right' }}>Items</th>
-                  <th style={{ ...TH, textAlign: 'right' }}>Total</th>
+                  <th style={TH}>{t('dashboard.client')}</th>
+                  <th style={TH}>{t('common.date')}</th>
+                  <th style={{ ...TH, textAlign: 'right' }}>{t('dashboard.items')}</th>
+                  <th style={{ ...TH, textAlign: 'right' }}>{t('common.total')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -154,7 +158,7 @@ export default function Dashboard({ user, setPage }: Props) {
                 {draftOrders.length > 10 && (
                   <tr>
                     <td colSpan={4} style={{ padding: '10px 20px', fontSize: 12, color: 'var(--muted)', fontFamily: 'var(--mono)', textAlign: 'center' }}>
-                      +{draftOrders.length - 10} more — view all in Orders
+                      {t('dashboard.more_view_all', { count: draftOrders.length - 10 })}
                     </td>
                   </tr>
                 )}
@@ -167,19 +171,19 @@ export default function Dashboard({ user, setPage }: Props) {
         {!loadingOrders && todayOrders.length > 0 && (
           <div style={{ ...CARD, padding: 0 }}>
             <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
-              <div style={{ fontSize: 14, fontWeight: 700 }}>Today's breakdown</div>
+              <div style={{ fontSize: 14, fontWeight: 700 }}>{t('dashboard.todays_breakdown')}</div>
             </div>
             <div className="breakdown-grid">
               {[
-                { label: 'Draft',     count: draftToday,     color: 'var(--warning)' },
-                { label: 'Confirmed', count: confirmedToday, color: 'var(--accent)'  },
-                { label: 'Delivered', count: deliveredToday, color: 'var(--accent2)' },
+                { labelKey: 'status.draft',     count: draftToday,     color: 'var(--warning)' },
+                { labelKey: 'status.confirmed', count: confirmedToday, color: 'var(--accent)'  },
+                { labelKey: 'status.delivered', count: deliveredToday, color: 'var(--accent2)' },
               ].map((s, i) => (
-                <div key={s.label} style={{
+                <div key={s.labelKey} style={{
                   padding: '20px 24px',
                   borderRight: i < 2 ? '1px solid var(--border)' : 'none',
                 }}>
-                  <div style={LABEL}>{s.label}</div>
+                  <div style={LABEL}>{t(s.labelKey)}</div>
                   <div style={{ fontSize: 28, fontWeight: 800, color: s.color }}>{s.count}</div>
                 </div>
               ))}
@@ -196,40 +200,40 @@ export default function Dashboard({ user, setPage }: Props) {
       {/* Info cards */}
       <div className="stat-grid" style={{ marginBottom: 24 }}>
         <div style={CARD}>
-          <div style={LABEL}>Signed in as</div>
+          <div style={LABEL}>{t('dashboard.signed_in_as')}</div>
           <div style={{ fontSize: 16, fontWeight: 800 }}>{user?.name ?? '—'}</div>
           <div style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--muted)', marginTop: 4 }}>{user?.email}</div>
         </div>
 
         <div style={CARD}>
-          <div style={LABEL}>Role</div>
+          <div style={LABEL}>{t('common.role')}</div>
           <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--accent)' }}>{user?.role}</div>
         </div>
 
         <div style={CARD}>
-          <div style={LABEL}>Status</div>
-          <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--accent2)' }}>active</div>
+          <div style={LABEL}>{t('common.status')}</div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--accent2)' }}>{t('dashboard.status_active')}</div>
         </div>
       </div>
 
       {/* Today's orders overview */}
       <div style={{ ...CARD, padding: 0 }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
-          <div style={{ fontSize: 14, fontWeight: 700 }}>Today's orders</div>
+          <div style={{ fontSize: 14, fontWeight: 700 }}>{t('dashboard.today_orders')}</div>
           <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2, fontFamily: 'var(--mono)' }}>{today}</div>
         </div>
         <div className="breakdown-grid-4">
           {[
-            { label: 'Total',     value: loadingOrders ? '…' : String(todayOrders.length),    color: 'var(--text)'    },
-            { label: 'Draft',     value: loadingOrders ? '…' : String(draftToday),            color: 'var(--warning)' },
-            { label: 'Confirmed', value: loadingOrders ? '…' : String(confirmedToday),        color: 'var(--accent)'  },
-            { label: 'Delivered', value: loadingOrders ? '…' : String(deliveredToday),        color: 'var(--accent2)' },
+            { labelKey: 'common.total',     value: loadingOrders ? '…' : String(todayOrders.length),    color: 'var(--text)'    },
+            { labelKey: 'status.draft',     value: loadingOrders ? '…' : String(draftToday),            color: 'var(--warning)' },
+            { labelKey: 'status.confirmed', value: loadingOrders ? '…' : String(confirmedToday),        color: 'var(--accent)'  },
+            { labelKey: 'status.delivered', value: loadingOrders ? '…' : String(deliveredToday),        color: 'var(--accent2)' },
           ].map((s, i) => (
-            <div key={s.label} style={{
+            <div key={s.labelKey} style={{
               padding: '20px 24px',
               borderRight: i < 3 ? '1px solid var(--border)' : 'none',
             }}>
-              <div style={LABEL}>{s.label}</div>
+              <div style={LABEL}>{t(s.labelKey)}</div>
               <div style={{ fontSize: 28, fontWeight: 800, color: s.color }}>{s.value}</div>
             </div>
           ))}

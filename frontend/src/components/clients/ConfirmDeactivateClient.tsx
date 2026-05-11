@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Modal from '../Modal';
 import { clientsApi } from '../../api/clients';
 import type { Client, ToastType } from '../../types';
@@ -11,34 +12,35 @@ interface Props {
 }
 
 export default function ConfirmDeactivateClient({ client, onClose, onDeactivated, toast }: Props) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
   async function confirm() {
     setLoading(true);
     try {
       await clientsApi.update(client.id, { is_active: false });
-      toast('Client deactivated');
+      toast(t('clients.toast_deactivated'));
       onDeactivated();
     } catch (err: any) {
-      toast(err.response?.data?.detail ?? 'Failed to deactivate', 'error');
+      toast(err.response?.data?.detail ?? t('common.failed_to_deactivate'), 'error');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <Modal title="Deactivate client?" onClose={onClose} width={380}>
+    <Modal title={t('clients.deactivate_title')} onClose={onClose} width={380}>
       <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 8 }}>
-        This will mark the client as inactive. They will still appear in historical orders.
+        {t('clients.deactivate_desc')}
       </div>
       <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{client.name}</div>
       <div style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'var(--mono)', marginTop: 4, marginBottom: 24 }}>
-        {client.phone || 'No phone'}
+        {client.phone || t('common.no_phone')}
       </div>
       <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-        <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
+        <button className="btn btn-ghost btn-sm" onClick={onClose}>{t('common.cancel')}</button>
         <button className="btn btn-danger btn-sm" onClick={confirm} disabled={loading}>
-          {loading ? <span className="spinner" /> : 'Deactivate'}
+          {loading ? <span className="spinner" /> : t('common.deactivate')}
         </button>
       </div>
     </Modal>

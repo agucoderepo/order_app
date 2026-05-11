@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import Modal from '../Modal';
 import { invoicesApi } from '../../api/invoices';
 import type { InvoiceRead, InvoiceStatus, ToastType } from '../../types';
@@ -11,12 +12,6 @@ const STATUS_BADGE: Record<InvoiceStatus, string> = {
   paid:  'badge-delivered',
 };
 
-const NEXT_ACTION: Record<InvoiceStatus, string | null> = {
-  draft: 'Mark as sent',
-  sent:  'Mark as paid',
-  paid:  null,
-};
-
 interface Props {
   invoiceId: string;
   onClose: () => void;
@@ -25,6 +20,7 @@ interface Props {
 }
 
 export default function InvoiceDetailModal({ invoiceId, onClose, onUpdated, toast }: Props) {
+  const { t } = useTranslation();
   const [inv, setInv] = useState<InvoiceRead | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -32,7 +28,7 @@ export default function InvoiceDetailModal({ invoiceId, onClose, onUpdated, toas
   useEffect(() => {
     invoicesApi.get(invoiceId)
       .then(setInv)
-      .catch(() => { toast('Failed to load invoice', 'error'); onClose(); })
+      .catch(() => { toast(t('invoices.load_error_detail'), 'error'); onClose(); })
       .finally(() => setLoading(false));
   }, [invoiceId]);
 
@@ -45,13 +41,19 @@ export default function InvoiceDetailModal({ invoiceId, onClose, onUpdated, toas
     try {
       const updated = await invoicesApi.update(inv.id, { status: nextStatus });
       setInv(updated);
-      toast(`Invoice marked as ${nextStatus}`);
+      toast(t('invoices.toast_marked_as', { status: t(`status.${nextStatus}`) }));
       onUpdated();
     } catch (err: any) {
-      toast(err.response?.data?.detail ?? 'Failed to update status', 'error');
+      toast(err.response?.data?.detail ?? t('invoices.update_status_error'), 'error');
     } finally {
       setUpdating(false);
     }
+  }
+
+  function getNextActionLabel(status: InvoiceStatus): string | null {
+    if (status === 'draft') return t('invoices.mark_as_sent');
+    if (status === 'sent') return t('invoices.mark_as_paid');
+    return null;
   }
 
   function lineTotal(unitPrice: string, qty: string, discount: string): number {
@@ -63,8 +65,8 @@ export default function InvoiceDetailModal({ invoiceId, onClose, onUpdated, toas
 
   return (
     <Modal
-      title={inv ? inv.invoice_number : 'Invoice'}
-      subtitle={inv ? `${inv.client.name} · Order date: ${inv.order_date}` : ''}
+      title={inv ? inv.invoice_number : t('invoices.col_invoice_num')}
+      subtitle={inv ? `${inv.client.name} · ${t('invoices.order_date_label', { date: inv.order_date })}` : ''}
       onClose={onClose}
       width={660}
     >
@@ -76,10 +78,10 @@ export default function InvoiceDetailModal({ invoiceId, onClose, onUpdated, toas
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <div style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'var(--mono)' }}>
-                Created {new Date(inv.created_at).toLocaleDateString()}
+                {t('invoices.created_on', { date: new Date(inv.created_at).toLocaleDateString() })}
               </div>
               <span className={`badge ${STATUS_BADGE[inv.status]}`}>
-                <span className="dot" />{inv.status}
+                <span className="dot" />{t(`status.${inv.status}`)}
               </span>
             </div>
 
@@ -90,11 +92,11 @@ export default function InvoiceDetailModal({ invoiceId, onClose, onUpdated, toas
                 rel="noreferrer"
                 className="btn btn-ghost btn-sm"
               >
-                Print / PDF
+                {t('invoices.print_pdf')}
               </a>
-              {NEXT_ACTION[inv.status] && (
+              {getNextActionLabel(inv.status) && (
                 <button className="btn btn-primary btn-sm" onClick={advanceStatus} disabled={updating}>
-                  {updating ? <span className="spinner" /> : NEXT_ACTION[inv.status]}
+                  {updating ? <span className="spinner" /> : getNextActionLabel(inv.status)}
                 </button>
               )}
             </div>
@@ -104,7 +106,14 @@ export default function InvoiceDetailModal({ invoiceId, onClose, onUpdated, toas
           <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 16 }}>
             <thead>
               <tr>
-                {['Product', 'Unit', 'Qty', 'Unit price', 'Disc %', 'Line total'].map((h) => (
+                {[
+                  t('invoices.col_product'),
+                  t('invoices.col_unit'),
+                  t('invoices.col_qty'),
+                  t('invoices.col_unit_price'),
+                  t('invoices.col_disc'),
+                  t('invoices.col_line_total'),
+                ].map((h) => (
                   <th key={h} style={thStyle}>{h}</th>
                 ))}
               </tr>
@@ -133,7 +142,7 @@ export default function InvoiceDetailModal({ invoiceId, onClose, onUpdated, toas
 
           {/* Total */}
           <div style={{ textAlign: 'right', fontFamily: 'var(--mono)', fontSize: 14, borderTop: '1px solid var(--border)', paddingTop: 12 }}>
-            Total:{' '}
+            {t('common.total')}:{' '}
             <span style={{ fontWeight: 800, fontSize: 16, color: 'var(--accent)' }}>
               ${Number(inv.total_amount).toFixed(2)}
             </span>

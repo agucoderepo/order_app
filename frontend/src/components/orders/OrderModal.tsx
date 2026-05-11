@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import Modal from '../Modal';
 import ClientCombobox from './ClientCombobox';
 import ProductTypeahead from './ProductTypeahead';
@@ -29,14 +30,13 @@ function lineTotal(price: number, qty: number, disc: number) {
 }
 
 export default function OrderModal({ order, onClose, onSaved, toast }: Props) {
+  const { t } = useTranslation();
   const editing = !!order?.id;
 
-  /* ── data ── */
   const [clients,     setClients]     = useState<Client[]>([]);
   const [products,    setProducts]    = useState<Product[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
-  /* ── form ── */
   const [clientId,  setClientId]  = useState(order?.client_id  ?? '');
   const [orderDate, setOrderDate] = useState(order?.order_date ?? todayIso());
   const [status,    setStatus]    = useState<OrderStatus>(order?.status ?? 'draft');
@@ -61,29 +61,26 @@ export default function OrderModal({ order, onClose, onSaved, toast }: Props) {
       .catch(() => setLoadingData(false));
   }, []);
 
-  /* ── items helpers ── */
   const addItem    = () => setItems((p) => [...p, { product_id: '', quantity: '', discount: '0' }]);
   const removeItem = (i: number) => setItems((p) => p.filter((_, j) => j !== i));
   const setItem    = (i: number, f: keyof ItemRow, v: string) =>
     setItems((p) => p.map((r, j) => (j === i ? { ...r, [f]: v } : r)));
 
-  /* ── validate ── */
   function validate(): string | null {
-    if (!clientId) return 'Please select a client';
-    if (!items.length) return 'Add at least one item';
+    if (!clientId) return t('orders.validation_select_client');
+    if (!items.length) return t('orders.validation_add_item');
     for (let i = 0; i < items.length; i++) {
-      if (!items[i].product_id) return `Row ${i + 1}: select a product`;
+      if (!items[i].product_id) return t('orders.validation_select_product', { row: i + 1 });
       const qty = parseFloat(items[i].quantity);
-      if (isNaN(qty) || qty <= 0) return `Row ${i + 1}: quantity must be positive`;
+      if (isNaN(qty) || qty <= 0) return t('orders.validation_qty', { row: i + 1 });
       const disc = parseFloat(items[i].discount);
-      if (isNaN(disc) || disc < 0 || disc > 100) return `Row ${i + 1}: discount must be 0–100`;
+      if (isNaN(disc) || disc < 0 || disc > 100) return t('orders.validation_discount', { row: i + 1 });
     }
     const ids = items.map((r) => r.product_id);
-    if (new Set(ids).size !== ids.length) return 'Duplicate products in order';
+    if (new Set(ids).size !== ids.length) return t('orders.validation_duplicate');
     return null;
   }
 
-  /* ── submit ── */
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const err = validate();
@@ -102,7 +99,7 @@ export default function OrderModal({ order, onClose, onSaved, toast }: Props) {
           notes: notes.trim() || null,
           items: orderItems,
         } as OrderUpdate);
-        toast('Order updated');
+        toast(t('orders.toast_updated'));
       } else {
         const body: OrderCreate = {
           client_id:  clientId,
@@ -112,11 +109,11 @@ export default function OrderModal({ order, onClose, onSaved, toast }: Props) {
           notes:      notes.trim() || null,
         };
         await ordersApi.create(body);
-        toast('Order created');
+        toast(t('orders.toast_created'));
       }
       onSaved();
     } catch (err: any) {
-      setError(err.response?.data?.detail ?? err.message ?? 'Something went wrong');
+      setError(err.response?.data?.detail ?? err.message ?? t('common.something_went_wrong'));
     } finally {
       setLoading(false);
     }
@@ -148,8 +145,8 @@ export default function OrderModal({ order, onClose, onSaved, toast }: Props) {
 
   return (
     <Modal
-      title={editing ? 'Edit order' : 'New order'}
-      subtitle={editing ? `#${order!.id.slice(0, 8)} · ${order!.client.name}` : 'Create a new order'}
+      title={editing ? t('orders.modal_title_edit') : t('orders.modal_title_new')}
+      subtitle={editing ? `#${order!.id.slice(0, 8)} · ${order!.client.name}` : t('orders.modal_sub_new')}
       onClose={onClose}
       width={700}
     >
@@ -158,11 +155,10 @@ export default function OrderModal({ order, onClose, onSaved, toast }: Props) {
           <div style={{ padding: '32px 0', textAlign: 'center' }}><span className="spinner" /></div>
         ) : (
           <>
-            {/* Client + Date / Status row */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               {!editing && (
                 <div className="field" style={{ gridColumn: '1 / -1' }}>
-                  <label>Client</label>
+                  <label>{t('orders.field_client')}</label>
                   <ClientCombobox
                     clients={clients}
                     value={clientId}
@@ -174,7 +170,7 @@ export default function OrderModal({ order, onClose, onSaved, toast }: Props) {
               )}
 
               <div className="field">
-                <label>Date</label>
+                <label>{t('orders.field_date')}</label>
                 <input
                   type="date"
                   value={orderDate}
@@ -187,30 +183,24 @@ export default function OrderModal({ order, onClose, onSaved, toast }: Props) {
 
               {editing && (
                 <div className="field">
-                  <label>Status</label>
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value as OrderStatus)}
-                    style={selectStyle}
-                  >
-                    {allowedStatuses.map((s) => <option key={s} value={s}>{s}</option>)}
+                  <label>{t('orders.field_status')}</label>
+                  <select value={status} onChange={(e) => setStatus(e.target.value as OrderStatus)} style={selectStyle}>
+                    {allowedStatuses.map((s) => <option key={s} value={s}>{t(`status.${s}`)}</option>)}
                   </select>
                 </div>
               )}
             </div>
 
-            {/* Items */}
             <div style={{ marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <label style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'var(--mono)', letterSpacing: '.05em', textTransform: 'uppercase' }}>
-                  Items
+                  {t('orders.field_items')}
                 </label>
-                <button type="button" className="btn btn-ghost btn-sm" onClick={addItem}>+ Add item</button>
+                <button type="button" className="btn btn-ghost btn-sm" onClick={addItem}>{t('orders.add_item')}</button>
               </div>
 
-              {/* Column headers */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 80px 28px', gap: 6, marginBottom: 4 }}>
-                {['Product', 'Qty', 'Disc. %', 'Subtotal', ''].map((h) => (
+                {[t('orders.col_product'), t('orders.col_qty'), t('orders.col_disc'), t('orders.col_subtotal'), ''].map((h) => (
                   <div key={h} style={{ fontSize: 10, color: 'var(--muted)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{h}</div>
                 ))}
               </div>
@@ -225,11 +215,7 @@ export default function OrderModal({ order, onClose, onSaved, toast }: Props) {
 
                   return (
                     <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 80px 28px', gap: 6, alignItems: 'center' }}>
-                      <ProductTypeahead
-                        products={products}
-                        value={row.product_id}
-                        onChange={(id) => setItem(idx, 'product_id', id)}
-                      />
+                      <ProductTypeahead products={products} value={row.product_id} onChange={(id) => setItem(idx, 'product_id', id)} />
 
                       <div style={{ position: 'relative' }}>
                         <input
@@ -274,17 +260,17 @@ export default function OrderModal({ order, onClose, onSaved, toast }: Props) {
 
               {grandTotal > 0 && (
                 <div style={{ textAlign: 'right', fontSize: 13, fontFamily: 'var(--mono)', color: 'var(--muted)', marginTop: 10, paddingRight: 34 }}>
-                  Total: <span style={{ fontWeight: 800, color: 'var(--accent)', fontSize: 15 }}>${grandTotal.toFixed(2)}</span>
+                  {t('common.total')}: <span style={{ fontWeight: 800, color: 'var(--accent)', fontSize: 15 }}>${grandTotal.toFixed(2)}</span>
                 </div>
               )}
             </div>
 
             <div className="field">
-              <label>Notes</label>
+              <label>{t('orders.field_notes')}</label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Delivery instructions, special requests..."
+                placeholder={t('orders.notes_placeholder')}
                 rows={2}
                 style={{ resize: 'vertical' }}
               />
@@ -295,9 +281,9 @@ export default function OrderModal({ order, onClose, onSaved, toast }: Props) {
         {error && <div className="error-text">{error}</div>}
 
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 24 }}>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>{t('common.cancel')}</button>
           <button type="submit" className="btn btn-primary btn-sm" disabled={loading || loadingData}>
-            {loading ? <span className="spinner" /> : editing ? 'Save changes' : 'Create order'}
+            {loading ? <span className="spinner" /> : editing ? t('orders.save_button') : t('orders.create_button')}
           </button>
         </div>
       </form>
