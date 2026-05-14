@@ -106,6 +106,7 @@ export default function ShoppingListView({ list, onUpdated, toast }: Props) {
             </div>
 
             {/* Items table */}
+            <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
@@ -173,6 +174,7 @@ export default function ShoppingListView({ list, onUpdated, toast }: Props) {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         ))}
       </div>
@@ -198,6 +200,7 @@ const thStyle = {
   letterSpacing: '.08em',
   textTransform: 'uppercase',
   padding: '10px 16px',
+  whiteSpace: 'nowrap',
 } as const;
 
 const tdStyle = {

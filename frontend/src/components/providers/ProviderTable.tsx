@@ -15,6 +15,7 @@ export default function ProviderTable({ providers, onEdit, onDeactivate }: Props
   }
 
   return (
+    <div style={{ overflowX: 'auto' }}>
     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
       <thead>
         <tr>
@@ -54,6 +55,7 @@ export default function ProviderTable({ providers, onEdit, onDeactivate }: Props
         ))}
       </tbody>
     </table>
+    </div>
   );
 }
 
@@ -65,6 +67,7 @@ const headerCellStyle = {
   letterSpacing: '.08em',
   textTransform: 'uppercase',
   padding: '12px 20px',
+  whiteSpace: 'nowrap',
 } as const;
 
 const cellStyle = {

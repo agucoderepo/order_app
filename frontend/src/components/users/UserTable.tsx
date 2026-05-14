@@ -20,6 +20,7 @@ export default function UserTable({ users, currentUserId, onEdit, onDeactivate }
   }
 
   return (
+    <div style={{ overflowX: 'auto' }}>
     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
       <thead>
         <tr>
@@ -29,6 +30,7 @@ export default function UserTable({ users, currentUserId, onEdit, onDeactivate }
               fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--muted)',
               letterSpacing: '.1em', textTransform: 'uppercase',
               borderBottom: '1px solid var(--border)', background: 'rgba(0,0,0,.2)',
+              whiteSpace: 'nowrap',
             }}>{h}</th>
           ))}
         </tr>
@@ -65,5 +67,6 @@ export default function UserTable({ users, currentUserId, onEdit, onDeactivate }
         ))}
       </tbody>
     </table>
+    </div>
   );
 }
