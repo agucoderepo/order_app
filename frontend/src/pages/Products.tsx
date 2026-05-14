@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { productsApi } from '../api/products';
 import ProductTable from '../components/products/ProductTable';
+import ProductDetailModal from '../components/products/ProductDetailModal';
 import ProductModal from '../components/products/ProductModal';
 import ConfirmDeactivateProduct from '../components/products/ConfirmDeactivateProduct';
 import type { Product, ToastType } from '../types';
@@ -12,6 +13,7 @@ interface Props {
 
 type Modal =
   | { mode: 'create' }
+  | { mode: 'view'; product: Product }
   | { mode: 'edit'; product: Product }
   | { mode: 'confirm'; product: Product }
   | null;
@@ -106,10 +108,18 @@ export default function Products({ toast }: Props) {
         {loading ? (
           <div style={{ padding: '48px 20px', textAlign: 'center' }}><span className="spinner" /></div>
         ) : (
-          <ProductTable products={filtered} onEdit={(p) => setModal({ mode: 'edit', product: p })} onDeactivate={(p) => setModal({ mode: 'confirm', product: p })} />
+          <ProductTable products={filtered} onView={(p) => setModal({ mode: 'view', product: p })} onEdit={(p) => setModal({ mode: 'edit', product: p })} onDeactivate={(p) => setModal({ mode: 'confirm', product: p })} />
         )}
       </div>
 
+      {modal?.mode === 'view' && (
+        <ProductDetailModal
+          product={modal.product}
+          onClose={() => setModal(null)}
+          onEdit={() => setModal({ mode: 'edit', product: modal.product })}
+          onDeactivate={() => setModal({ mode: 'confirm', product: modal.product })}
+        />
+      )}
       {modal?.mode === 'create' && (
         <ProductModal toast={toast} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />
       )}

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { clientsApi } from '../api/clients';
 import ClientTable from '../components/clients/ClientTable';
+import ClientDetailModal from '../components/clients/ClientDetailModal';
 import ClientModal from '../components/clients/ClientModal';
 import ConfirmDeactivateClient from '../components/clients/ConfirmDeactivateClient';
 import type { Client, ToastType } from '../types';
@@ -12,6 +13,7 @@ interface Props {
 
 type Modal =
   | { mode: 'create' }
+  | { mode: 'view'; client: Client }
   | { mode: 'edit'; client: Client }
   | { mode: 'confirm'; client: Client }
   | null;
@@ -84,10 +86,18 @@ export default function Clients({ toast }: Props) {
         {loading ? (
           <div style={{ padding: '48px 20px', textAlign: 'center' }}><span className="spinner" /></div>
         ) : (
-          <ClientTable clients={filtered} onEdit={(c) => setModal({ mode: 'edit', client: c })} onDeactivate={(c) => setModal({ mode: 'confirm', client: c })} />
+          <ClientTable clients={filtered} onView={(c) => setModal({ mode: 'view', client: c })} onEdit={(c) => setModal({ mode: 'edit', client: c })} onDeactivate={(c) => setModal({ mode: 'confirm', client: c })} />
         )}
       </div>
 
+      {modal?.mode === 'view' && (
+        <ClientDetailModal
+          client={modal.client}
+          onClose={() => setModal(null)}
+          onEdit={() => setModal({ mode: 'edit', client: modal.client })}
+          onDeactivate={() => setModal({ mode: 'confirm', client: modal.client })}
+        />
+      )}
       {modal?.mode === 'create' && (
         <ClientModal toast={toast} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />
       )}

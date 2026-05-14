@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usersApi } from '../api/users';
 import UserTable from '../components/users/UserTable';
+import UserDetailModal from '../components/users/UserDetailModal';
 import UserModal from '../components/users/UserModal';
 import ConfirmDeactivate from '../components/users/ConfirmDeactivate';
 import type { User, ToastType } from '../types';
@@ -13,6 +14,7 @@ interface Props {
 
 type Modal =
   | { mode: 'create' }
+  | { mode: 'view'; user: User }
   | { mode: 'edit'; user: User }
   | { mode: 'confirm'; user: User }
   | null;
@@ -101,12 +103,21 @@ export default function Users({ currentUser, toast }: Props) {
           <UserTable
             users={filtered}
             currentUserId={currentUser?.id}
+            onView={(u) => setModal({ mode: 'view', user: u })}
             onEdit={(u) => setModal({ mode: 'edit', user: u })}
             onDeactivate={(u) => setModal({ mode: 'confirm', user: u })}
           />
         )}
       </div>
 
+      {modal?.mode === 'view' && (
+        <UserDetailModal
+          user={modal.user}
+          onClose={() => setModal(null)}
+          onEdit={() => setModal({ mode: 'edit', user: modal.user })}
+          onDeactivate={() => setModal({ mode: 'confirm', user: modal.user })}
+        />
+      )}
       {modal?.mode === 'create' && (
         <UserModal toast={toast} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />
       )}

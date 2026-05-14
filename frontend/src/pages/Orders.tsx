@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ordersApi } from '../api/orders';
 import OrderTable from '../components/orders/OrderTable';
+import OrderDetailModal from '../components/orders/OrderDetailModal';
 import OrderModal from '../components/orders/OrderModal';
 import type { OrderRead, OrderStatus, ToastType } from '../types';
 
@@ -11,6 +12,7 @@ interface Props {
 
 type Modal =
   | { mode: 'create' }
+  | { mode: 'view'; order: OrderRead }
   | { mode: 'edit'; order: OrderRead }
   | null;
 
@@ -104,10 +106,17 @@ export default function Orders({ toast }: Props) {
         {loading ? (
           <div style={{ padding: '48px 20px', textAlign: 'center' }}><span className="spinner" /></div>
         ) : (
-          <OrderTable orders={filtered} onEdit={(order) => setModal({ mode: 'edit', order })} />
+          <OrderTable orders={filtered} onView={(order) => setModal({ mode: 'view', order })} onEdit={(order) => setModal({ mode: 'edit', order })} />
         )}
       </div>
 
+      {modal?.mode === 'view' && (
+        <OrderDetailModal
+          order={modal.order}
+          onClose={() => setModal(null)}
+          onEdit={() => setModal({ mode: 'edit', order: modal.order })}
+        />
+      )}
       {modal?.mode === 'create' && (
         <OrderModal toast={toast} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />
       )}

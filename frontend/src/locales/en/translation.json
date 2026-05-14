@@ -23,7 +23,9 @@
     "reset": "Reset",
     "failed_to_deactivate": "Failed to deactivate",
     "no_phone": "No phone",
-    "created": "Created"
+    "created": "Created",
+    "updated": "Updated",
+    "close": "Close"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -154,6 +156,7 @@
     "col_name": "Name",
     "col_address": "Address",
     "col_phone": "Phone",
+    "col_notes": "Notes",
     "col_status": "Status",
     "col_actions": "Actions",
     "modal_title_edit": "Edit client",
@@ -185,6 +188,7 @@
     "col_contact": "Contact",
     "col_phone": "Phone",
     "col_address": "Address",
+    "col_notes": "Notes",
     "col_status": "Status",
     "col_actions": "Actions",
     "modal_title_edit": "Edit provider",
@@ -275,7 +279,14 @@
     "toast_updated": "Order updated",
     "toast_created": "Order created",
     "save_button": "Save changes",
-    "create_button": "Create order"
+    "create_button": "Create order",
+    "col_source": "Source",
+    "col_notes": "Notes",
+    "item_product": "Product",
+    "item_qty": "Qty",
+    "item_price": "Unit price",
+    "item_discount": "Discount",
+    "item_total": "Total"
   },
   "shopping_lists": {
     "list_date": "List date",

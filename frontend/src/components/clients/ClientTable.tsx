@@ -3,11 +3,12 @@ import type { Client } from '../../types';
 
 interface Props {
   clients: Client[];
+  onView: (client: Client) => void;
   onEdit: (client: Client) => void;
   onDeactivate: (client: Client) => void;
 }
 
-export default function ClientTable({ clients, onEdit, onDeactivate }: Props) {
+export default function ClientTable({ clients, onView, onEdit, onDeactivate }: Props) {
   const { t } = useTranslation();
 
   if (!clients.length) {
@@ -15,6 +16,7 @@ export default function ClientTable({ clients, onEdit, onDeactivate }: Props) {
   }
 
   return (
+    <div style={{ overflowX: 'auto' }}>
     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
       <thead>
         <tr>
@@ -27,7 +29,7 @@ export default function ClientTable({ clients, onEdit, onDeactivate }: Props) {
       </thead>
       <tbody>
         {clients.map((c) => (
-          <tr key={c.id} style={{ borderTop: '1px solid var(--border)' }}>
+          <tr key={c.id} className="tr-clickable" style={{ borderTop: '1px solid var(--border)' }} onClick={() => onView(c)}>
             <td style={cellStyle}>
               <div style={{ fontWeight: 700 }}>{c.name}</div>
               {c.notes && <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>{c.notes}</div>}
@@ -41,7 +43,7 @@ export default function ClientTable({ clients, onEdit, onDeactivate }: Props) {
               </span>
             </td>
             <td style={cellStyle}>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 8 }} onClick={(e) => e.stopPropagation()}>
                 <button className="btn btn-ghost btn-sm" onClick={() => onEdit(c)}>{t('common.edit')}</button>
                 {c.is_active && (
                   <button className="btn btn-danger btn-sm" onClick={() => onDeactivate(c)}>{t('common.deactivate')}</button>
@@ -52,6 +54,7 @@ export default function ClientTable({ clients, onEdit, onDeactivate }: Props) {
         ))}
       </tbody>
     </table>
+    </div>
   );
 }
 
@@ -63,6 +66,7 @@ const headerCellStyle = {
   letterSpacing: '.08em',
   textTransform: 'uppercase',
   padding: '12px 20px',
+  whiteSpace: 'nowrap',
 } as const;
 
 const cellStyle = {
