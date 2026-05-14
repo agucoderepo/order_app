@@ -10,14 +10,24 @@ from app.schemas import TimestampMixin
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)
- 
- 
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalise_email(cls, v: str) -> str:
+        return v.lower() if isinstance(v, str) else v
+
+
 class RegisterRequest(BaseModel):
     name: str = Field(min_length=2, max_length=255)
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
     role: str = Field(default="operator")
- 
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalise_email(cls, v: str) -> str:
+        return v.lower() if isinstance(v, str) else v
+
     @field_validator("role")
     @classmethod
     def validate_role(cls, v: str) -> str:

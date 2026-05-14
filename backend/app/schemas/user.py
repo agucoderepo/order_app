@@ -13,7 +13,12 @@ class UserBase(BaseModel):
     email: EmailStr
     role: str = Field(default="operator")
     is_active: bool = True
- 
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalise_email(cls, v: str) -> str:
+        return v.lower() if isinstance(v, str) else v
+
     @field_validator("role")
     @classmethod
     def validate_role(cls, v: str) -> str:
@@ -33,7 +38,12 @@ class UserUpdate(BaseModel):
     role: Optional[str] = None
     is_active: Optional[bool] = None
     password: Optional[str] = Field(default=None, min_length=8, max_length=128)
- 
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalise_email(cls, v: Optional[str]) -> Optional[str]:
+        return v.lower() if isinstance(v, str) else v
+
     @field_validator("role")
     @classmethod
     def validate_role(cls, v: Optional[str]) -> Optional[str]:
