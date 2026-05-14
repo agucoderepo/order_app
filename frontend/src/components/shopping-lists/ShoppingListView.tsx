@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { shoppingListsApi } from '../../api/shopping-lists';
 import AdjustItemModal from './AdjustItemModal';
 import type { ShoppingListRead, ShoppingListItemRead, ToastType } from '../../types';
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function ShoppingListView({ list, onUpdated, toast }: Props) {
+  const { t } = useTranslation();
   const [adjustingItem, setAdjustingItem] = useState<ShoppingListItemRead | null>(null);
   const [finalizing, setFinalizing] = useState(false);
   const [reopening, setReopening] = useState(false);
@@ -18,26 +20,26 @@ export default function ShoppingListView({ list, onUpdated, toast }: Props) {
   const grandTotal = list.by_provider.reduce((sum, g) => sum + parseFloat(g.subtotal), 0);
 
   async function handleReopen() {
-    if (!confirm('Re-open this shopping list? All purchase orders for this day will be deleted.')) return;
+    if (!confirm(t('shopping_lists.confirm_reopen'))) return;
     setReopening(true);
     try {
       onUpdated(await shoppingListsApi.reopen(list.list_date));
-      toast('Shopping list re-opened');
+      toast(t('shopping_lists.toast_reopened'));
     } catch (err: any) {
-      toast(err.response?.data?.detail ?? 'Failed to re-open', 'error');
+      toast(err.response?.data?.detail ?? t('shopping_lists.reopen_error'), 'error');
     } finally {
       setReopening(false);
     }
   }
 
   async function handleFinalize() {
-    if (!confirm('Finalize this shopping list? This will lock it and generate purchase orders.')) return;
+    if (!confirm(t('shopping_lists.confirm_finalize'))) return;
     setFinalizing(true);
     try {
       onUpdated(await shoppingListsApi.finalize(list.list_date));
-      toast('Shopping list finalized');
+      toast(t('shopping_lists.toast_finalized'));
     } catch (err: any) {
-      toast(err.response?.data?.detail ?? 'Failed to finalize', 'error');
+      toast(err.response?.data?.detail ?? t('shopping_lists.finalize_error'), 'error');
     } finally {
       setFinalizing(false);
     }
@@ -50,26 +52,26 @@ export default function ShoppingListView({ list, onUpdated, toast }: Props) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span className={`badge ${isFinalized ? 'badge-admin' : 'badge-operator'}`}>
             <span className="dot" />
-            {list.status}
+            {t(`status.${list.status}`)}
           </span>
           {isFinalized && list.finalized_at && (
             <span style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'var(--mono)' }}>
-              Finalized {new Date(list.finalized_at).toLocaleString()}
+              {t('shopping_lists.finalized_at', { datetime: new Date(list.finalized_at).toLocaleString() })}
             </span>
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <span style={{ fontFamily: 'var(--mono)', fontWeight: 800, fontSize: 16, color: 'var(--accent)' }}>
-            Grand total: ${grandTotal.toFixed(2)}
+            {t('shopping_lists.grand_total')} ${grandTotal.toFixed(2)}
           </span>
           {!isFinalized && (
             <button className="btn btn-primary btn-sm" onClick={handleFinalize} disabled={finalizing}>
-              {finalizing ? <span className="spinner" /> : 'Finalize list'}
+              {finalizing ? <span className="spinner" /> : t('shopping_lists.finalize_button')}
             </button>
           )}
           {isFinalized && (
             <button className="btn btn-ghost btn-sm" onClick={handleReopen} disabled={reopening}>
-              {reopening ? <span className="spinner" /> : 'Re-open list'}
+              {reopening ? <span className="spinner" /> : t('shopping_lists.reopen_button')}
             </button>
           )}
         </div>
@@ -77,7 +79,7 @@ export default function ShoppingListView({ list, onUpdated, toast }: Props) {
 
       {list.by_provider.length === 0 && (
         <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--muted)' }}>
-          No confirmed orders found for this date.
+          {t('shopping_lists.empty_orders')}
         </div>
       )}
 
@@ -104,11 +106,22 @@ export default function ShoppingListView({ list, onUpdated, toast }: Props) {
             </div>
 
             {/* Items table */}
+            <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  {['Product', 'Unit', 'Unit price', 'System qty', 'Adjusted qty', 'Final qty', 'Line total', 'Notes', ...(isFinalized ? [] : [''])].map((h) => (
-                    <th key={h} style={thStyle}>{h}</th>
+                  {[
+                    t('shopping_lists.col_product'),
+                    t('shopping_lists.col_unit'),
+                    t('shopping_lists.col_unit_price'),
+                    t('shopping_lists.col_system_qty'),
+                    t('shopping_lists.col_adjusted_qty'),
+                    t('shopping_lists.col_final_qty'),
+                    t('shopping_lists.col_line_total'),
+                    t('shopping_lists.col_notes'),
+                    ...(isFinalized ? [] : ['']),
+                  ].map((h, i) => (
+                    <th key={i} style={thStyle}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -152,7 +165,7 @@ export default function ShoppingListView({ list, onUpdated, toast }: Props) {
                       {!isFinalized && (
                         <td style={tdStyle}>
                           <button className="btn btn-ghost btn-sm" onClick={() => setAdjustingItem(item)}>
-                            Adjust
+                            {t('shopping_lists.adjust_button')}
                           </button>
                         </td>
                       )}
@@ -161,6 +174,7 @@ export default function ShoppingListView({ list, onUpdated, toast }: Props) {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         ))}
       </div>
@@ -186,6 +200,7 @@ const thStyle = {
   letterSpacing: '.08em',
   textTransform: 'uppercase',
   padding: '10px 16px',
+  whiteSpace: 'nowrap',
 } as const;
 
 const tdStyle = {

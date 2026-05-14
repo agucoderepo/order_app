@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { usersApi } from '../api/users';
 import UserTable from '../components/users/UserTable';
+import UserDetailModal from '../components/users/UserDetailModal';
 import UserModal from '../components/users/UserModal';
 import ConfirmDeactivate from '../components/users/ConfirmDeactivate';
 import type { User, ToastType } from '../types';
@@ -12,11 +14,13 @@ interface Props {
 
 type Modal =
   | { mode: 'create' }
+  | { mode: 'view'; user: User }
   | { mode: 'edit'; user: User }
   | { mode: 'confirm'; user: User }
   | null;
 
 export default function Users({ currentUser, toast }: Props) {
+  const { t } = useTranslation();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -27,11 +31,11 @@ export default function Users({ currentUser, toast }: Props) {
     try {
       setUsers(await usersApi.list());
     } catch (e: any) {
-      toast(e.response?.data?.detail ?? 'Failed to load users', 'error');
+      toast(e.response?.data?.detail ?? t('users.load_error'), 'error');
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, t]);
 
   useEffect(() => {
     load();
@@ -47,14 +51,16 @@ export default function Users({ currentUser, toast }: Props) {
   const operators = users.filter((u) => u.role === 'operator' && u.is_active).length;
   const inactive = users.filter((u) => !u.is_active).length;
 
+  const stats = [
+    { label: t('users.stats_total'),             value: users.length,                  color: 'var(--accent)' },
+    { label: t('users.stats_admins_operators'),   value: `${admins} / ${operators}`,    color: 'var(--accent2)' },
+    { label: t('users.stats_inactive'),           value: inactive,                      color: 'var(--danger)' },
+  ];
+
   return (
     <>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
-        {[
-          { label: 'Total users', value: users.length, color: 'var(--accent)' },
-          { label: 'Admins / Operators', value: `${admins} / ${operators}`, color: 'var(--accent2)' },
-          { label: 'Inactive', value: inactive, color: 'var(--danger)' },
-        ].map((s) => (
+      <div className="stat-grid">
+        {stats.map((s) => (
           <div
             key={s.label}
             style={{
@@ -64,16 +70,7 @@ export default function Users({ currentUser, toast }: Props) {
               padding: '20px 22px',
             }}
           >
-            <div
-              style={{
-                fontSize: 11,
-                fontFamily: 'var(--mono)',
-                color: 'var(--muted)',
-                letterSpacing: '.08em',
-                textTransform: 'uppercase',
-                marginBottom: 8,
-              }}
-            >
+            <div style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--muted)', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>
               {s.label}
             </div>
             <div style={{ fontSize: 30, fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.value}</div>
@@ -81,44 +78,19 @@ export default function Users({ currentUser, toast }: Props) {
         ))}
       </div>
 
-      <div
-        style={{
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--radius)',
-          overflow: 'hidden',
-        }}
-      >
-        <div
-          style={{
-            padding: '14px 20px',
-            borderBottom: '1px solid var(--border)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-          }}
-        >
-          <div style={{ fontSize: 14, fontWeight: 700 }}>All users</div>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div style={{ fontSize: 14, fontWeight: 700 }}>{t('users.table_title')}</div>
           <div style={{ display: 'flex', gap: 10 }}>
             <input
-              style={{
-                background: 'var(--bg)',
-                border: '1px solid var(--border)',
-                borderRadius: 8,
-                padding: '8px 12px',
-                color: 'var(--text)',
-                fontFamily: 'var(--sans)',
-                fontSize: 13,
-                outline: 'none',
-                width: 200,
-              }}
-              placeholder="Search name or email…"
+              className="toolbar-search"
+              style={{ width: 200 }}
+              placeholder={t('users.search_placeholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
             <button className="btn btn-primary btn-sm" onClick={() => setModal({ mode: 'create' })}>
-              + New user
+              {t('users.new_button')}
             </button>
           </div>
         </div>
@@ -131,36 +103,29 @@ export default function Users({ currentUser, toast }: Props) {
           <UserTable
             users={filtered}
             currentUserId={currentUser?.id}
+            onView={(u) => setModal({ mode: 'view', user: u })}
             onEdit={(u) => setModal({ mode: 'edit', user: u })}
             onDeactivate={(u) => setModal({ mode: 'confirm', user: u })}
           />
         )}
       </div>
 
+      {modal?.mode === 'view' && (
+        <UserDetailModal
+          user={modal.user}
+          onClose={() => setModal(null)}
+          onEdit={() => setModal({ mode: 'edit', user: modal.user })}
+          onDeactivate={() => setModal({ mode: 'confirm', user: modal.user })}
+        />
+      )}
       {modal?.mode === 'create' && (
         <UserModal toast={toast} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />
       )}
       {modal?.mode === 'edit' && (
-        <UserModal
-          user={modal.user}
-          toast={toast}
-          onClose={() => setModal(null)}
-          onSaved={() => {
-            setModal(null);
-            load();
-          }}
-        />
+        <UserModal user={modal.user} toast={toast} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />
       )}
       {modal?.mode === 'confirm' && (
-        <ConfirmDeactivate
-          user={modal.user}
-          toast={toast}
-          onClose={() => setModal(null)}
-          onDeactivated={() => {
-            setModal(null);
-            load();
-          }}
-        />
+        <ConfirmDeactivate user={modal.user} toast={toast} onClose={() => setModal(null)} onDeactivated={() => { setModal(null); load(); }} />
       )}
     </>
   );

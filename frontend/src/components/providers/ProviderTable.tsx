@@ -1,31 +1,36 @@
+import { useTranslation } from 'react-i18next';
 import type { Provider } from '../../types';
 
 interface Props {
   providers: Provider[];
+  onView: (provider: Provider) => void;
   onEdit: (provider: Provider) => void;
   onDeactivate: (provider: Provider) => void;
 }
 
-export default function ProviderTable({ providers, onEdit, onDeactivate }: Props) {
+export default function ProviderTable({ providers, onView, onEdit, onDeactivate }: Props) {
+  const { t } = useTranslation();
+
   if (!providers.length) {
-    return <div style={{ padding: '24px 20px', color: 'var(--muted)' }}>No providers found.</div>;
+    return <div style={{ padding: '24px 20px', color: 'var(--muted)' }}>{t('providers.empty')}</div>;
   }
 
   return (
+    <div style={{ overflowX: 'auto' }}>
     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
       <thead>
         <tr>
-          <th style={headerCellStyle}>Name</th>
-          <th style={headerCellStyle}>Contact</th>
-          <th style={headerCellStyle}>Phone</th>
-          <th style={headerCellStyle}>Address</th>
-          <th style={headerCellStyle}>Status</th>
-          <th style={headerCellStyle}>Actions</th>
+          <th style={headerCellStyle}>{t('providers.col_name')}</th>
+          <th style={headerCellStyle}>{t('providers.col_contact')}</th>
+          <th style={headerCellStyle}>{t('providers.col_phone')}</th>
+          <th style={headerCellStyle}>{t('providers.col_address')}</th>
+          <th style={headerCellStyle}>{t('providers.col_status')}</th>
+          <th style={headerCellStyle}>{t('providers.col_actions')}</th>
         </tr>
       </thead>
       <tbody>
         {providers.map((p) => (
-          <tr key={p.id} style={{ borderTop: '1px solid var(--border)' }}>
+          <tr key={p.id} className="tr-clickable" style={{ borderTop: '1px solid var(--border)' }} onClick={() => onView(p)}>
             <td style={cellStyle}>
               <div style={{ fontWeight: 700 }}>{p.name}</div>
               {p.notes && <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>{p.notes}</div>}
@@ -36,14 +41,14 @@ export default function ProviderTable({ providers, onEdit, onDeactivate }: Props
             <td style={cellStyle}>
               <span className={`badge ${p.is_active ? 'badge-admin' : 'badge-operator'}`}>
                 <span className="dot" />
-                {p.is_active ? 'active' : 'inactive'}
+                {p.is_active ? t('common.active') : t('common.inactive')}
               </span>
             </td>
             <td style={cellStyle}>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button className="btn btn-ghost btn-sm" onClick={() => onEdit(p)}>Edit</button>
+              <div style={{ display: 'flex', gap: 8 }} onClick={(e) => e.stopPropagation()}>
+                <button className="btn btn-ghost btn-sm" onClick={() => onEdit(p)}>{t('common.edit')}</button>
                 {p.is_active && (
-                  <button className="btn btn-danger btn-sm" onClick={() => onDeactivate(p)}>Deactivate</button>
+                  <button className="btn btn-danger btn-sm" onClick={() => onDeactivate(p)}>{t('common.deactivate')}</button>
                 )}
               </div>
             </td>
@@ -51,6 +56,7 @@ export default function ProviderTable({ providers, onEdit, onDeactivate }: Props
         ))}
       </tbody>
     </table>
+    </div>
   );
 }
 
@@ -62,6 +68,7 @@ const headerCellStyle = {
   letterSpacing: '.08em',
   textTransform: 'uppercase',
   padding: '12px 20px',
+  whiteSpace: 'nowrap',
 } as const;
 
 const cellStyle = {

@@ -22,7 +22,8 @@ from app.services import audit_service, invoice_service, shopping_list_service
 router = APIRouter()
 
 
-def _list_with_items(db: Session, list_date: date) -> ShoppingList | None:
+def _list_with_items(db: Session, list_date: date, user_id: str) -> ShoppingList | None:
+    """Load a shopping list scoped to the requesting user."""
     return (
         db.query(ShoppingList)
         .options(
@@ -31,7 +32,10 @@ def _list_with_items(db: Session, list_date: date) -> ShoppingList | None:
             .joinedload(Product.provider),
             joinedload(ShoppingList.items).joinedload(ShoppingListItem.provider),
         )
-        .filter(ShoppingList.list_date == list_date)
+        .filter(
+            ShoppingList.list_date == list_date,
+            ShoppingList.created_by == user_id,
+        )
         .first()
     )
 
@@ -69,10 +73,12 @@ def aggregate_list(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # Operators only aggregate their own orders; admins aggregate all.
+    scope_to_owner = current_user.role == "operator"
     shopping_list_service.aggregate_orders_into_list(
-        list_date, str(current_user.id), db
+        list_date, str(current_user.id), db, scope_to_owner=scope_to_owner
     )
-    sl = _list_with_items(db, list_date)
+    sl = _list_with_items(db, list_date, str(current_user.id))
     if not sl:
         raise HTTPException(status_code=404, detail="Shopping list not found")
     audit_service.log(
@@ -89,9 +95,9 @@ def aggregate_list(
 def get_list(
     list_date: date,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
-    sl = _list_with_items(db, list_date)
+    sl = _list_with_items(db, list_date, str(current_user.id))
     if not sl:
         raise HTTPException(status_code=404, detail="Shopping list not found")
     return _to_read(sl)
@@ -112,7 +118,7 @@ def adjust_item(
         iid = uuid.UUID(item_id)
     except ValueError:
         raise HTTPException(status_code=404, detail="Item not found") from None
-    sl = _list_with_items(db, list_date)
+    sl = _list_with_items(db, list_date, str(current_user.id))
     if not sl:
         raise HTTPException(status_code=404, detail="Shopping list not found")
     item = next((i for i in sl.items if i.id == iid), None)
@@ -129,7 +135,7 @@ def adjust_item(
         detail=f"adj_qty={payload.adjusted_quantity} notes={payload.notes}",
     )
     db.commit()
-    sl = _list_with_items(db, list_date)
+    sl = _list_with_items(db, list_date, str(current_user.id))
     assert sl is not None
     return _to_read(sl)
 
@@ -140,7 +146,7 @@ def finalize_list(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    sl = _list_with_items(db, list_date)
+    sl = _list_with_items(db, list_date, str(current_user.id))
     if not sl:
         raise HTTPException(status_code=404, detail="Shopping list not found")
     if sl.status == "finalized":
@@ -158,13 +164,19 @@ def finalize_list(
         detail=f"{list_date} count={sl.finalize_count}",
     )
     db.commit()
-    sl = _list_with_items(db, list_date)
+    sl = _list_with_items(db, list_date, str(current_user.id))
     assert sl is not None
+
     shopping_list_service.create_purchase_orders_for_list(sl, str(current_user.id), db)
+
+    # For operators: only invoice their own confirmed orders.
+    order_owner_id = str(current_user.id) if current_user.role == "operator" else None
     invoice_service.create_invoices_for_list(
-        list_date, sl.finalize_count, str(current_user.id), db
+        list_date, sl.finalize_count, str(current_user.id), db,
+        order_owner_id=order_owner_id,
     )
-    sl = _list_with_items(db, list_date)
+
+    sl = _list_with_items(db, list_date, str(current_user.id))
     assert sl is not None
     return _to_read(sl)
 
@@ -175,7 +187,7 @@ def reopen_list(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    sl = _list_with_items(db, list_date)
+    sl = _list_with_items(db, list_date, str(current_user.id))
     if not sl:
         raise HTTPException(status_code=404, detail="Shopping list not found")
     if sl.status != "finalized":
@@ -183,15 +195,17 @@ def reopen_list(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="List is not finalized",
         )
-    # Delete purchase orders (items cascade via DB)
+    # Delete purchase orders for this user's list (items cascade via DB)
     db.query(PurchaseOrder).filter(
         PurchaseOrder.shopping_list_id == sl.id
     ).delete(synchronize_session="fetch")
-    # Delete invoices for confirmed orders on this date
-    invoice_service.delete_invoices_for_date(list_date, db)
+
+    # Delete invoices scoped to this user's orders
+    order_owner_id = str(current_user.id) if current_user.role == "operator" else None
+    invoice_service.delete_invoices_for_date(list_date, db, order_owner_id=order_owner_id)
+
     sl.status = "open"
     sl.finalized_at = None
-    # finalize_count intentionally NOT reset — tracks cumulative finalizations
     audit_service.log(
         db, user=current_user,
         action="shopping_list.reopen",
@@ -199,6 +213,6 @@ def reopen_list(
         detail=str(list_date),
     )
     db.commit()
-    sl = _list_with_items(db, list_date)
+    sl = _list_with_items(db, list_date, str(current_user.id))
     assert sl is not None
     return _to_read(sl)

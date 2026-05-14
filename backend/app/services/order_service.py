@@ -19,10 +19,18 @@ def _orders_with_relations(db: Session):
     )
 
 
-def list_orders(db: Session, *, skip: int = 0, limit: int = 50) -> list[Order]:
+def list_orders(
+    db: Session,
+    *,
+    skip: int = 0,
+    limit: int = 50,
+    owner_id: uuid.UUID | None = None,
+) -> list[Order]:
+    q = _orders_with_relations(db)
+    if owner_id is not None:
+        q = q.filter(Order.created_by == owner_id)
     return (
-        _orders_with_relations(db)
-        .order_by(Order.order_date.desc(), Order.created_at.desc())
+        q.order_by(Order.order_date.desc(), Order.created_at.desc())
         .offset(skip)
         .limit(limit)
         .all()

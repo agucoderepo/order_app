@@ -1,33 +1,42 @@
+import { useTranslation } from 'react-i18next';
 import type { User } from '../types';
 
-interface NavItem { id: string; label: string; icon: string; adminOnly?: boolean; }
+interface NavItem { id: string; icon: string; adminOnly?: boolean; }
 
 const NAV: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: '⊞' },
-  { id: 'users',     label: 'Users',     icon: '◎', adminOnly: true },
-  { id: 'clients',   label: 'Clients',   icon: '◑', adminOnly: true },
-  { id: 'providers', label: 'Providers', icon: '◐', adminOnly: true },
-  { id: 'products',  label: 'Products',  icon: '▣', adminOnly: true },
-  { id: 'orders',          label: 'Orders',         icon: '◈' },
-  { id: 'shopping-lists',  label: 'Shopping lists',  icon: '▤', adminOnly: true },
-  { id: 'purchase-orders', label: 'Purchase orders', icon: '◻', adminOnly: true },
-  { id: 'invoices',        label: 'Invoices',        icon: '◫', adminOnly: true },
-  { id: 'audit-log',      label: 'Audit log',      icon: '▦', adminOnly: true },
-  // Future nav items added here as app grows:
+  { id: 'dashboard',       icon: '⊞' },
+  { id: 'users',           icon: '◎', adminOnly: true },
+  { id: 'clients',         icon: '◑', adminOnly: true },
+  { id: 'providers',       icon: '◐', adminOnly: true },
+  { id: 'products',        icon: '▣', adminOnly: true },
+  { id: 'orders',          icon: '◈' },
+  { id: 'shopping-lists',  icon: '▤' },
+  { id: 'purchase-orders', icon: '◻' },
+  { id: 'invoices',        icon: '◫', adminOnly: true },
+  { id: 'audit-log',       icon: '▦', adminOnly: true },
 ];
+
+function navKey(id: string) {
+  return id.replace(/-/g, '_');
+}
 
 interface Props {
   page: string;
   setPage: (p: string) => void;
   user: User | null;
   onLogout: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export default function Sidebar({ page, setPage, user, onLogout }: Props) {
+export default function Sidebar({ page, setPage, user, onLogout, isOpen }: Props) {
+  const { t } = useTranslation();
   const visibleNav = NAV.filter((n) => !n.adminOnly || user?.role === 'admin');
 
+  const panelLabel = user?.role === 'admin' ? t('nav.admin_panel') : t('nav.operator_panel');
+
   return (
-    <aside style={{
+    <aside className={`sidebar${isOpen ? ' sidebar-open' : ''}`} style={{
       width: 220, flexShrink: 0,
       background: 'var(--surface)', borderRight: '1px solid var(--border)',
       display: 'flex', flexDirection: 'column', padding: '24px 0',
@@ -42,7 +51,7 @@ export default function Sidebar({ page, setPage, user, onLogout }: Props) {
           OrderApp
         </div>
         <div style={{ fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--accent)', letterSpacing: '.15em', textTransform: 'uppercase' }}>
-          {user ? `${user.role.charAt(0).toUpperCase() + user.role.slice(1)} Panel` : ''}
+          {user ? panelLabel : ''}
         </div>
       </div>
 
@@ -63,7 +72,7 @@ export default function Sidebar({ page, setPage, user, onLogout }: Props) {
             }}
           >
             <span style={{ width: 16, textAlign: 'center', opacity: .8 }}>{n.icon}</span>
-            {n.label}
+            {t(`nav.${navKey(n.id)}`)}
           </button>
         ))}
       </nav>
@@ -84,7 +93,7 @@ export default function Sidebar({ page, setPage, user, onLogout }: Props) {
           </div>
         </div>
         <button className="btn btn-ghost btn-sm" onClick={onLogout} style={{ width: '100%' }}>
-          Sign out
+          {t('nav.sign_out')}
         </button>
       </div>
     </aside>

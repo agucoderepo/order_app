@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import Modal from '../Modal';
 import { productsApi } from '../../api/products';
 import { providersApi } from '../../api/providers';
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export default function ProductModal({ product, onClose, onSaved, toast }: Props) {
+  const { t } = useTranslation();
   const editing = !!product?.id;
   const [form, setForm] = useState({
     name: product?.name ?? '',
@@ -39,16 +41,16 @@ export default function ProductModal({ product, onClose, onSaved, toast }: Props
     setForm((p) => ({ ...p, [k]: v }));
   }
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError('');
     const priceVal = parseFloat(form.price);
     if (isNaN(priceVal) || priceVal <= 0) {
-      setError('Price must be a positive number');
+      setError(t('products.price_positive'));
       return;
     }
     if (!form.provider_id) {
-      setError('Please select a provider');
+      setError(t('products.select_provider'));
       return;
     }
     setLoading(true);
@@ -61,7 +63,7 @@ export default function ProductModal({ product, onClose, onSaved, toast }: Props
           provider_id: form.provider_id,
         };
         await productsApi.update(product!.id, body);
-        toast('Product updated');
+        toast(t('products.toast_updated'));
       } else {
         const body: ProductCreate = {
           name: form.name.trim(),
@@ -70,37 +72,32 @@ export default function ProductModal({ product, onClose, onSaved, toast }: Props
           provider_id: form.provider_id,
         };
         await productsApi.create(body);
-        toast('Product created');
+        toast(t('products.toast_created'));
       }
       onSaved();
     } catch (err: any) {
-      setError(err.response?.data?.detail ?? err.message ?? 'Something went wrong');
+      setError(err.response?.data?.detail ?? err.message ?? t('common.something_went_wrong'));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <Modal title={editing ? 'Edit product' : 'New product'} subtitle="Product details and pricing" onClose={onClose}>
+    <Modal title={editing ? t('products.modal_title_edit') : t('products.modal_title_new')} subtitle={t('products.modal_sub')} onClose={onClose}>
       <form onSubmit={submit}>
         <div className="field">
-          <label>Name</label>
-          <input
-            value={form.name}
-            onChange={(e) => set('name', e.target.value)}
-            placeholder="Whole milk 1L"
-            required
-          />
+          <label>{t('products.field_name')}</label>
+          <input value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Whole milk 1L" required />
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div className="field">
-            <label>Unit</label>
+            <label>{t('products.field_unit')}</label>
             <input
               list="unit-suggestions"
               value={form.unit}
               onChange={(e) => set('unit', e.target.value)}
-              placeholder="kg, unit, box..."
+              placeholder={t('products.unit_placeholder')}
               required
             />
             <datalist id="unit-suggestions">
@@ -109,21 +106,13 @@ export default function ProductModal({ product, onClose, onSaved, toast }: Props
           </div>
 
           <div className="field">
-            <label>Price</label>
-            <input
-              type="number"
-              step="0.01"
-              min="0.01"
-              value={form.price}
-              onChange={(e) => set('price', e.target.value)}
-              placeholder="0.00"
-              required
-            />
+            <label>{t('products.field_price')}</label>
+            <input type="number" step="0.01" min="0.01" value={form.price} onChange={(e) => set('price', e.target.value)} placeholder="0.00" required />
           </div>
         </div>
 
         <div className="field">
-          <label>Provider</label>
+          <label>{t('products.field_provider')}</label>
           {loadingProviders ? (
             <div style={{ padding: '8px 0' }}><span className="spinner" /></div>
           ) : (
@@ -131,18 +120,9 @@ export default function ProductModal({ product, onClose, onSaved, toast }: Props
               value={form.provider_id}
               onChange={(e) => set('provider_id', e.target.value)}
               required
-              style={{
-                background: 'var(--bg)',
-                border: '1px solid var(--border)',
-                borderRadius: 8,
-                padding: '8px 12px',
-                color: form.provider_id ? 'var(--text)' : 'var(--muted)',
-                fontFamily: 'var(--sans)',
-                fontSize: 13,
-                width: '100%',
-              }}
+              style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', color: form.provider_id ? 'var(--text)' : 'var(--muted)', fontFamily: 'var(--sans)', fontSize: 13, width: '100%' }}
             >
-              <option value="">Select a provider...</option>
+              <option value="">{t('products.provider_placeholder')}</option>
               {providers.map((p) => (
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
@@ -153,11 +133,9 @@ export default function ProductModal({ product, onClose, onSaved, toast }: Props
         {error && <div className="error-text">{error}</div>}
 
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 24 }}>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>
-            Cancel
-          </button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>{t('common.cancel')}</button>
           <button type="submit" className="btn btn-primary btn-sm" disabled={loading || loadingProviders}>
-            {loading ? <span className="spinner" /> : editing ? 'Save changes' : 'Create product'}
+            {loading ? <span className="spinner" /> : editing ? t('products.save_button') : t('products.create_button')}
           </button>
         </div>
       </form>
