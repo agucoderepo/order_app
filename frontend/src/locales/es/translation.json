@@ -23,7 +23,9 @@
     "reset": "Restablecer",
     "failed_to_deactivate": "Error al desactivar",
     "no_phone": "Sin teléfono",
-    "created": "Creado"
+    "created": "Creado",
+    "updated": "Actualizado",
+    "close": "Cerrar"
   },
   "nav": {
     "dashboard": "Panel",
@@ -154,6 +156,7 @@
     "col_name": "Nombre",
     "col_address": "Dirección",
     "col_phone": "Teléfono",
+    "col_notes": "Notas",
     "col_status": "Estado",
     "col_actions": "Acciones",
     "modal_title_edit": "Editar cliente",
@@ -185,6 +188,7 @@
     "col_contact": "Contacto",
     "col_phone": "Teléfono",
     "col_address": "Dirección",
+    "col_notes": "Notas",
     "col_status": "Estado",
     "col_actions": "Acciones",
     "modal_title_edit": "Editar proveedor",
@@ -275,7 +279,14 @@
     "toast_updated": "Pedido actualizado",
     "toast_created": "Pedido creado",
     "save_button": "Guardar cambios",
-    "create_button": "Crear pedido"
+    "create_button": "Crear pedido",
+    "col_source": "Origen",
+    "col_notes": "Notas",
+    "item_product": "Producto",
+    "item_qty": "Cant.",
+    "item_price": "Precio unitario",
+    "item_discount": "Descuento",
+    "item_total": "Total"
   },
   "shopping_lists": {
     "list_date": "Fecha de lista",

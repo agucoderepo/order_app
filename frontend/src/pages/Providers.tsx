@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { providersApi } from '../api/providers';
 import ProviderTable from '../components/providers/ProviderTable';
+import ProviderDetailModal from '../components/providers/ProviderDetailModal';
 import ProviderModal from '../components/providers/ProviderModal';
 import ConfirmDeactivateProvider from '../components/providers/ConfirmDeactivateProvider';
 import type { Provider, ToastType } from '../types';
@@ -12,6 +13,7 @@ interface Props {
 
 type Modal =
   | { mode: 'create' }
+  | { mode: 'view'; provider: Provider }
   | { mode: 'edit'; provider: Provider }
   | { mode: 'confirm'; provider: Provider }
   | null;
@@ -85,10 +87,18 @@ export default function Providers({ toast }: Props) {
         {loading ? (
           <div style={{ padding: '48px 20px', textAlign: 'center' }}><span className="spinner" /></div>
         ) : (
-          <ProviderTable providers={filtered} onEdit={(p) => setModal({ mode: 'edit', provider: p })} onDeactivate={(p) => setModal({ mode: 'confirm', provider: p })} />
+          <ProviderTable providers={filtered} onView={(p) => setModal({ mode: 'view', provider: p })} onEdit={(p) => setModal({ mode: 'edit', provider: p })} onDeactivate={(p) => setModal({ mode: 'confirm', provider: p })} />
         )}
       </div>
 
+      {modal?.mode === 'view' && (
+        <ProviderDetailModal
+          provider={modal.provider}
+          onClose={() => setModal(null)}
+          onEdit={() => setModal({ mode: 'edit', provider: modal.provider })}
+          onDeactivate={() => setModal({ mode: 'confirm', provider: modal.provider })}
+        />
+      )}
       {modal?.mode === 'create' && (
         <ProviderModal toast={toast} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />
       )}

@@ -4,11 +4,12 @@ import type { User } from '../../types';
 interface Props {
   users: User[];
   currentUserId?: string;
+  onView: (user: User) => void;
   onEdit: (user: User) => void;
   onDeactivate: (user: User) => void;
 }
 
-export default function UserTable({ users, currentUserId, onEdit, onDeactivate }: Props) {
+export default function UserTable({ users, currentUserId, onView, onEdit, onDeactivate }: Props) {
   const { t } = useTranslation();
 
   if (users.length === 0) {
@@ -37,7 +38,7 @@ export default function UserTable({ users, currentUserId, onEdit, onDeactivate }
       </thead>
       <tbody>
         {users.map((u) => (
-          <tr key={u.id} style={{ borderBottom: '1px solid rgba(255,255,255,.04)' }}>
+          <tr key={u.id} className="tr-clickable" style={{ borderBottom: '1px solid rgba(255,255,255,.04)' }} onClick={() => onView(u)}>
             <td style={{ padding: '13px 20px', verticalAlign: 'middle' }}>
               <div style={{ fontWeight: 600, fontSize: 13 }}>{u.name}</div>
               <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{u.email}</div>
@@ -56,7 +57,7 @@ export default function UserTable({ users, currentUserId, onEdit, onDeactivate }
               {new Date(u.created_at).toLocaleDateString()}
             </td>
             <td style={{ padding: '13px 20px', verticalAlign: 'middle' }}>
-              <div style={{ display: 'flex', gap: 6 }}>
+              <div style={{ display: 'flex', gap: 6 }} onClick={(e) => e.stopPropagation()}>
                 <button className="btn btn-ghost btn-sm" onClick={() => onEdit(u)}>{t('common.edit')}</button>
                 {u.id !== currentUserId && u.is_active && (
                   <button className="btn btn-danger btn-sm" onClick={() => onDeactivate(u)}>{t('common.deactivate')}</button>

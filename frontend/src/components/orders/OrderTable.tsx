@@ -3,6 +3,7 @@ import type { OrderRead, OrderStatus } from '../../types';
 
 interface Props {
   orders: OrderRead[];
+  onView: (order: OrderRead) => void;
   onEdit: (order: OrderRead) => void;
 }
 
@@ -20,7 +21,7 @@ function orderTotal(order: OrderRead): string {
   return total.toFixed(2);
 }
 
-export default function OrderTable({ orders, onEdit }: Props) {
+export default function OrderTable({ orders, onView, onEdit }: Props) {
   const { t } = useTranslation();
 
   if (!orders.length) {
@@ -42,7 +43,7 @@ export default function OrderTable({ orders, onEdit }: Props) {
       </thead>
       <tbody>
         {orders.map((o) => (
-          <tr key={o.id} style={{ borderTop: '1px solid var(--border)' }}>
+          <tr key={o.id} className="tr-clickable" style={{ borderTop: '1px solid var(--border)' }} onClick={() => onView(o)}>
             <td style={{ ...cellStyle, fontFamily: 'var(--mono)', fontSize: 12, whiteSpace: 'nowrap' }}>{o.order_date}</td>
             <td style={cellStyle}>
               <div style={{ fontWeight: 700 }}>{o.client.name}</div>
@@ -60,7 +61,7 @@ export default function OrderTable({ orders, onEdit }: Props) {
                 {t(`status.${o.status}`)}
               </span>
             </td>
-            <td style={cellStyle}>
+            <td style={cellStyle} onClick={(e) => e.stopPropagation()}>
               <button className="btn btn-ghost btn-sm" onClick={() => onEdit(o)}>{t('common.edit')}</button>
             </td>
           </tr>

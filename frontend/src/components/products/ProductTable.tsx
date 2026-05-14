@@ -3,11 +3,12 @@ import type { Product } from '../../types';
 
 interface Props {
   products: Product[];
+  onView: (product: Product) => void;
   onEdit: (product: Product) => void;
   onDeactivate: (product: Product) => void;
 }
 
-export default function ProductTable({ products, onEdit, onDeactivate }: Props) {
+export default function ProductTable({ products, onView, onEdit, onDeactivate }: Props) {
   const { t } = useTranslation();
 
   if (!products.length) {
@@ -29,7 +30,7 @@ export default function ProductTable({ products, onEdit, onDeactivate }: Props) 
       </thead>
       <tbody>
         {products.map((p) => (
-          <tr key={p.id} style={{ borderTop: '1px solid var(--border)' }}>
+          <tr key={p.id} className="tr-clickable" style={{ borderTop: '1px solid var(--border)' }} onClick={() => onView(p)}>
             <td style={cellStyle}>
               <div style={{ fontWeight: 700 }}>{p.name}</div>
             </td>
@@ -43,7 +44,7 @@ export default function ProductTable({ products, onEdit, onDeactivate }: Props) 
               </span>
             </td>
             <td style={cellStyle}>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 8 }} onClick={(e) => e.stopPropagation()}>
                 <button className="btn btn-ghost btn-sm" onClick={() => onEdit(p)}>{t('common.edit')}</button>
                 {p.is_active && (
                   <button className="btn btn-danger btn-sm" onClick={() => onDeactivate(p)}>{t('common.deactivate')}</button>
