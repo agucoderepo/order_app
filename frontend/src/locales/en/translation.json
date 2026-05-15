@@ -142,7 +142,14 @@
     "password_required": "Password is required",
     "deactivate_title": "Deactivate user?",
     "deactivate_desc": "This will mark the account as inactive. The user will not be able to log in.",
-    "toast_deactivated": "User deactivated"
+    "toast_deactivated": "User deactivated",
+    "reset_password_title": "Reset password",
+    "reset_password_sub": "Set a new password for {{name}}",
+    "reset_password_button": "Reset password",
+    "field_confirm_password": "Confirm password",
+    "passwords_dont_match": "Passwords do not match",
+    "toast_password_reset": "Password reset successfully",
+    "role_locked_self": "You cannot change your own role"
   },
   "clients": {
     "stats_total": "Total clients",

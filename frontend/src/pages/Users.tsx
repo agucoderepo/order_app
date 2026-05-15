@@ -4,6 +4,7 @@ import { usersApi } from '../api/users';
 import UserTable from '../components/users/UserTable';
 import UserDetailModal from '../components/users/UserDetailModal';
 import UserModal from '../components/users/UserModal';
+import ResetPasswordModal from '../components/users/ResetPasswordModal';
 import ConfirmDeactivate from '../components/users/ConfirmDeactivate';
 import type { User, ToastType } from '../types';
 
@@ -16,6 +17,7 @@ type Modal =
   | { mode: 'create' }
   | { mode: 'view'; user: User }
   | { mode: 'edit'; user: User }
+  | { mode: 'reset'; user: User }
   | { mode: 'confirm'; user: User }
   | null;
 
@@ -113,16 +115,27 @@ export default function Users({ currentUser, toast }: Props) {
       {modal?.mode === 'view' && (
         <UserDetailModal
           user={modal.user}
+          isSelf={modal.user.id === currentUser?.id}
           onClose={() => setModal(null)}
           onEdit={() => setModal({ mode: 'edit', user: modal.user })}
           onDeactivate={() => setModal({ mode: 'confirm', user: modal.user })}
+          onResetPassword={() => setModal({ mode: 'reset', user: modal.user })}
         />
       )}
       {modal?.mode === 'create' && (
         <UserModal toast={toast} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />
       )}
       {modal?.mode === 'edit' && (
-        <UserModal user={modal.user} toast={toast} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />
+        <UserModal
+          user={modal.user}
+          isSelf={modal.user.id === currentUser?.id}
+          toast={toast}
+          onClose={() => setModal(null)}
+          onSaved={() => { setModal(null); load(); }}
+        />
+      )}
+      {modal?.mode === 'reset' && (
+        <ResetPasswordModal user={modal.user} toast={toast} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />
       )}
       {modal?.mode === 'confirm' && (
         <ConfirmDeactivate user={modal.user} toast={toast} onClose={() => setModal(null)} onDeactivated={() => { setModal(null); load(); }} />

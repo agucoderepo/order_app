@@ -142,7 +142,14 @@
     "password_required": "La contraseña es requerida",
     "deactivate_title": "¿Desactivar usuario?",
     "deactivate_desc": "Esto marcará la cuenta como inactiva. El usuario no podrá iniciar sesión.",
-    "toast_deactivated": "Usuario desactivado"
+    "toast_deactivated": "Usuario desactivado",
+    "reset_password_title": "Restablecer contraseña",
+    "reset_password_sub": "Establecer nueva contraseña para {{name}}",
+    "reset_password_button": "Restablecer contraseña",
+    "field_confirm_password": "Confirmar contraseña",
+    "passwords_dont_match": "Las contraseñas no coinciden",
+    "toast_password_reset": "Contraseña restablecida correctamente",
+    "role_locked_self": "No puedes cambiar tu propio rol"
   },
   "clients": {
     "stats_total": "Total de clientes",
