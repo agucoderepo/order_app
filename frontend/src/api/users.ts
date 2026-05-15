@@ -13,7 +13,7 @@ export const usersApi = {
   },
 
   update: async (id: string, data: UserUpdate): Promise<User> => {
-    const res = await apiClient.put<User>(`/users/${id}`, data);
+    const res = await apiClient.patch<User>(`/users/${id}`, data);
     return res.data;
   },
 

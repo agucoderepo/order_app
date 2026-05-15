@@ -4,9 +4,11 @@ import type { User } from '../../types';
 
 interface Props {
   user: User;
+  isSelf?: boolean;
   onClose: () => void;
   onEdit: () => void;
   onDeactivate: () => void;
+  onResetPassword: () => void;
 }
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
@@ -20,7 +22,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export default function UserDetailModal({ user, onClose, onEdit, onDeactivate }: Props) {
+export default function UserDetailModal({ user, isSelf, onClose, onEdit, onDeactivate, onResetPassword }: Props) {
   const { t } = useTranslation();
 
   return (
@@ -49,11 +51,12 @@ export default function UserDetailModal({ user, onClose, onEdit, onDeactivate }:
         } />
       </div>
 
-      <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+      <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
         <button className="btn btn-ghost btn-sm" onClick={onClose}>{t('common.close')}</button>
-        {user.is_active && (
+        {user.is_active && !isSelf && (
           <button className="btn btn-danger btn-sm" onClick={onDeactivate}>{t('common.deactivate')}</button>
         )}
+        <button className="btn btn-ghost btn-sm" onClick={onResetPassword}>{t('users.reset_password_title')}</button>
         <button className="btn btn-primary btn-sm" onClick={onEdit}>{t('common.edit')}</button>
       </div>
     </Modal>
