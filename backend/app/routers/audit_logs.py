@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies.auth import get_current_user, require_admin
+from app.dependencies.auth import require_permission
 from app.models import AuditLog, User
 from app.schemas.audit_log import AuditLogRead
 
@@ -22,7 +22,7 @@ def list_audit_logs(
     date_to: date | None = Query(None),
     limit: int = Query(200, ge=1, le=1000),
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_permission("audit_logs:read")),
 ):
     q = db.query(AuditLog)
     if entity_type:

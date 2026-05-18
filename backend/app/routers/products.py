@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import require_permission
 from app.models import Product, User
 from app.schemas.product import (
     ProductCreate,
@@ -24,7 +24,7 @@ def search_products(
     q: str,
     limit: int = 25,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User = Depends(require_permission("products:read")),
 ):
     term = f"%{q.strip()}%"
     rows = (
@@ -53,7 +53,7 @@ def list_products(
     limit: int = 100,
     active_only: bool = False,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User = Depends(require_permission("products:read")),
 ):
     query = db.query(Product).options(joinedload(Product.provider)).order_by(Product.name)
     if active_only:
@@ -65,7 +65,7 @@ def list_products(
 def create_product(
     payload: ProductCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("products:write")),
 ):
     row = Product(
         name=payload.name,
@@ -95,7 +95,7 @@ def create_product(
 def get_product(
     product_id: str,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User = Depends(require_permission("products:read")),
 ):
     try:
         pid = uuid.UUID(product_id)
@@ -117,7 +117,7 @@ def update_product(
     product_id: str,
     payload: ProductUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("products:write")),
 ):
     try:
         pid = uuid.UUID(product_id)

@@ -9,8 +9,25 @@ erDiagram
         string password_hash
         string role
         boolean is_active
+        int permissions_version
         timestamp created_at
         timestamp updated_at
+    }
+
+    PERMISSIONS {
+        string name PK
+        text description
+    }
+
+    ROLE_PERMISSIONS {
+        string role_name PK
+        string permission_name PK
+    }
+
+    USER_PERMISSIONS {
+        uuid user_id PK
+        string permission_name PK
+        boolean granted
     }
 
     USER_IDENTITIES {
@@ -137,6 +154,9 @@ erDiagram
 
     USERS ||--o{ USER_IDENTITIES : "has"
     USERS ||--o{ REFRESH_TOKENS : "has"
+    USERS ||--o{ USER_PERMISSIONS : "has overrides"
+    ROLE_PERMISSIONS }o--|| PERMISSIONS : "grants"
+    USER_PERMISSIONS }o--|| PERMISSIONS : "overrides"
     USERS ||--o{ CLIENTS : "creates"
     USERS ||--o{ PROVIDERS : "creates"
     USERS ||--o{ PRODUCTS : "creates"

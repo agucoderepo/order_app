@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
+from app.dependencies.auth import load_permissions_from_db
 from app.models import RefreshToken, User, UserIdentity
 from app.schemas.auth import LoginRequest, RefreshRequest, RegisterRequest, TokenResponse
 
@@ -26,8 +27,16 @@ def _hash_refresh(raw: str) -> str:
 def _issue_tokens(user: User, db: Session) -> TokenResponse:
     now = datetime.now(timezone.utc)
     exp_access = now + timedelta(minutes=settings.access_token_expire_minutes)
+    # Embed the resolved permission set so every request can skip the DB join
+    # until permissions_version changes (cache miss path in get_current_user).
+    perms = list(load_permissions_from_db(user, db))
     access_token = jwt.encode(
-        {"sub": str(user.id), "exp": exp_access},
+        {
+            "sub": str(user.id),
+            "exp": exp_access,
+            "perms": perms,
+            "perms_v": user.permissions_version,
+        },
         settings.secret_key,
         algorithm=settings.algorithm,
     )

@@ -7,7 +7,7 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
-from app.dependencies.auth import get_current_user, get_print_user
+from app.dependencies.auth import get_print_user, require_permission
 from app.models import Invoice, Order, OrderItem, Product, User
 from app.schemas.invoice import InvoiceRead, InvoiceSummary, InvoiceUpdate
 from app.schemas.order import OrderItemRead
@@ -52,7 +52,7 @@ def list_invoices(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User = Depends(require_permission("invoices:read")),
 ):
     rows = (
         db.query(Invoice)
@@ -83,7 +83,7 @@ def list_invoices(
 def get_invoice(
     invoice_id: str,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User = Depends(require_permission("invoices:read")),
 ):
     try:
         iid = uuid.UUID(invoice_id)
@@ -201,7 +201,7 @@ def update_invoice(
     invoice_id: str,
     payload: InvoiceUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("invoices:write")),
 ):
     try:
         iid = uuid.UUID(invoice_id)

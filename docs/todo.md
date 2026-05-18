@@ -31,21 +31,28 @@ Based on current code in `frontend/src` and `backend/app`.
 - [x] Product search and item entry flow
 - [x] Restricted views for shopping/purchase/invoice modules (shopping lists open to operators; purchase orders + invoices remain admin-only)
 
+### To complete (Permissions UI — new)
+- [ ] Permission management page: view/edit permissions per role (`GET/PUT /permissions/roles/{role}`)
+- [ ] Per-user permission overrides UI (`GET/POST/DELETE /permissions/users/{id}/{perm}`)
+- [ ] Update sidebar visibility logic to use resolved permissions instead of hard-coded role checks
+
 ## Backend
 
 ### Completed
-- [x] App and router wiring in `main.py` for:
-  - [x] `/auth`
-  - [x] `/users`
-  - [x] `/clients`
-  - [x] `/providers`
-  - [x] `/products`
-  - [x] `/orders`
-  - [x] `/shopping-lists`
-  - [x] `/purchase-orders`
-  - [x] `/invoices`
+- [x] App and router wiring in `main.py` for all resource groups including `/permissions`
 - [x] JWT auth flow: register, login, refresh, current user
-- [x] Role guard available: `require_admin`
+- [x] **Permission-based access control (PBAC)** — replaces role-only checks
+  - [x] `app/permissions.py` — 26 named permissions with `resource:action[:all]` convention
+  - [x] `permissions`, `role_permissions`, `user_permissions` DB tables
+  - [x] `users.permissions_version` column for JWT cache invalidation
+  - [x] `require_permission(perm)` FastAPI dependency factory
+  - [x] `has_permission(user, perm)` helper for inline data-scope checks
+  - [x] JWT embeds `perms` list + `perms_v` version on every token issue
+  - [x] Two-path permission resolution: JWT fast path (no extra query) vs DB cache miss
+  - [x] `bump_permissions_version` / `bump_permissions_version_for_role` helpers
+  - [x] All 9 routers migrated from role checks to permission checks
+  - [x] `GET/PUT /permissions/roles/{role}` — manage role permission sets
+  - [x] `GET/POST/DELETE /permissions/users/{id}` — per-user overrides
 - [x] Users CRUD (list/create/update + `/me`)
 - [x] Clients CRUD (list/create/get/update)
 - [x] Providers CRUD (list/create/get/update)
@@ -54,21 +61,20 @@ Based on current code in `frontend/src` and `backend/app`.
 - [x] Shopping list aggregate/get/adjust/finalize flow
 - [x] Purchase orders list/get/update status
 - [x] Invoices list/get/update status
+- [x] Audit logging (who changed status/quantities/prices and when)
+- [x] Alembic migration `0001_add_permissions` — adds column + seeds tables (SQLite + PostgreSQL compatible)
 
 ### To complete (Backend hardening and scope)
 - [ ] Server-side PDF generation for invoices and purchase orders (WeasyPrint or ReportLab) — replace browser-print with actual PDF files stored at pdf_path
 - [ ] Add missing delete/archive endpoints where needed (if required by business rules)
-- [ ] Enforce role permissions per module (Admin vs Operator) beyond users-only admin checks
 - [ ] Add consistent pagination/filters/sorting for all list endpoints
 - [ ] Add domain validations (state transitions, constraints, clearer error details)
-- [x] Add audit logging (who changed status/quantities/prices and when)
 - [ ] Add integration + unit tests for all routers/services
-- [ ] Add Alembic migrations for production-safe schema evolution
 - [ ] Improve CORS/env configuration for all frontend dev origins in use
 - [ ] Add API docs examples and endpoint-level response error schemas
 
 ## Suggested next implementation order
-1. Frontend Clients/Providers/Products modules (Admin)
-2. Frontend Orders flow (Operator/Admin)
-3. Frontend Shopping Lists + Purchase Orders + Invoices
-4. Backend permission matrix + tests + migrations
+1. Frontend: Permission management UI (roles + user overrides)
+2. Frontend: Migrate sidebar/visibility from `user.role` to resolved permissions
+3. Backend: Integration tests for permission enforcement
+4. Backend: PDF generation

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import has_permission, require_permission
 from app.models import User
 from app.schemas.order import OrderCreate, OrderRead, OrderUpdate
 from app.services import audit_service, order_service, whatsapp_parser
@@ -15,10 +15,10 @@ def list_orders(
     skip: int = 0,
     limit: int = 50,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("orders:read")),
 ):
-    # Operators only see orders they created; admins see all.
-    owner_id = current_user.id if current_user.role == "operator" else None
+    # Users with orders:read:all see every order; others see only their own.
+    owner_id = None if has_permission(current_user, "orders:read:all") else current_user.id
     return order_service.list_orders(db, skip=skip, limit=limit, owner_id=owner_id)
 
 
@@ -26,7 +26,7 @@ def list_orders(
 def create_order(
     payload: OrderCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("orders:write")),
 ):
     order = order_service.create_order(db, payload, created_by=current_user.id)
     audit_service.log(
@@ -43,7 +43,7 @@ def create_order(
 def parse_whatsapp(
     body: dict,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("orders:parse")),
 ):
     return whatsapp_parser.parse_whatsapp_message(body["text"], db)
 
@@ -53,15 +53,17 @@ def update_order(
     order_id: str,
     payload: OrderUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("orders:write")),
 ):
     order = order_service.get_order_or_404(db, order_id)
-    # Operators can only modify orders they created.
-    if current_user.role == "operator" and str(order.created_by) != str(current_user.id):
+    # Without orders:write:all, users can only modify orders they created.
+    if not has_permission(current_user, "orders:write:all") and \
+            str(order.created_by) != str(current_user.id):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
     old_status = order.status
     updated = order_service.update_order(db, order, payload)
-    detail = f"status={old_status}->{updated.status}" if payload.status and old_status != updated.status else None
+    detail = f"status={old_status}->{updated.status}" \
+        if payload.status and old_status != updated.status else None
     audit_service.log(
         db, user=current_user,
         action="order.update",

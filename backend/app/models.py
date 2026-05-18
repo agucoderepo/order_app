@@ -79,35 +79,39 @@ class User(Base):
     Core user account. Supports local password and/or OAuth login.
     password_hash is nullable — an OAuth-only user has no password.
 
-    Roles:
-      admin    — full access: manage users, products, providers, finalize lists
-      operator — create/manage orders, view shopping lists and invoices
+    Roles are named bundles of permissions stored in role_permissions.
+    permissions_version is a counter bumped whenever a user's effective
+    permissions change; it is embedded in the JWT so the auth layer can
+    detect stale permission caches without an extra DB join.
     """
     __tablename__ = "users"
 
-    id            = Column(UUID, primary_key=True, default=new_uuid)
-    name          = Column(String(255), nullable=False)
-    email         = Column(String(255), nullable=False, unique=True)
-    password_hash = Column(String(255), nullable=True)   # NULL for OAuth-only accounts
-    role          = Column(String(50), nullable=False, default="operator")
-    is_active     = Column(Boolean, nullable=False, default=True)
-    created_at    = Column(DateTime, nullable=False, server_default=func.now())
-    updated_at    = Column(DateTime, nullable=False, server_default=func.now(),
-                           onupdate=func.now())
+    id                  = Column(UUID, primary_key=True, default=new_uuid)
+    name                = Column(String(255), nullable=False)
+    email               = Column(String(255), nullable=False, unique=True)
+    password_hash       = Column(String(255), nullable=True)   # NULL for OAuth-only accounts
+    role                = Column(String(50), nullable=False, default="operator")
+    is_active           = Column(Boolean, nullable=False, default=True)
+    permissions_version = Column(Integer, nullable=False, default=0)
+    created_at          = Column(DateTime, nullable=False, server_default=func.now())
+    updated_at          = Column(DateTime, nullable=False, server_default=func.now(),
+                                 onupdate=func.now())
 
     # Relationships
-    identities      = relationship("UserIdentity", back_populates="user",
-                                   cascade="all, delete-orphan")
-    refresh_tokens  = relationship("RefreshToken", back_populates="user",
-                                   cascade="all, delete-orphan")
-    clients         = relationship("Client", back_populates="created_by_user")
-    providers       = relationship("Provider", back_populates="created_by_user")
-    products        = relationship("Product", back_populates="created_by_user")
-    orders          = relationship("Order", back_populates="created_by_user")
-    shopping_lists  = relationship("ShoppingList", back_populates="created_by_user")
-    purchase_orders = relationship("PurchaseOrder", back_populates="created_by_user")
-    invoices        = relationship("Invoice", back_populates="created_by_user")
-    audit_logs      = relationship("AuditLog", back_populates="user")
+    identities       = relationship("UserIdentity", back_populates="user",
+                                    cascade="all, delete-orphan")
+    refresh_tokens   = relationship("RefreshToken", back_populates="user",
+                                    cascade="all, delete-orphan")
+    user_permissions = relationship("UserPermission", back_populates="user",
+                                    cascade="all, delete-orphan")
+    clients          = relationship("Client", back_populates="created_by_user")
+    providers        = relationship("Provider", back_populates="created_by_user")
+    products         = relationship("Product", back_populates="created_by_user")
+    orders           = relationship("Order", back_populates="created_by_user")
+    shopping_lists   = relationship("ShoppingList", back_populates="created_by_user")
+    purchase_orders  = relationship("PurchaseOrder", back_populates="created_by_user")
+    invoices         = relationship("Invoice", back_populates="created_by_user")
+    audit_logs       = relationship("AuditLog", back_populates="user")
 
     __table_args__ = (
         Index("idx_users_email", "email"),
@@ -175,6 +179,75 @@ class RefreshToken(Base):
 
     def __repr__(self):
         return f"<RefreshToken user_id={self.user_id} revoked={self.revoked}>"
+
+
+class Permission(Base):
+    """
+    A single named capability (e.g. "orders:read:all").
+    Permissions are seeded at startup; they are not created by users.
+    The ":all" suffix signals cross-user data scope.
+    """
+    __tablename__ = "permissions"
+
+    name        = Column(String(100), primary_key=True)
+    description = Column(Text, nullable=True)
+
+    role_permissions = relationship("RolePermission", back_populates="permission",
+                                    cascade="all, delete-orphan")
+    user_permissions = relationship("UserPermission", back_populates="permission",
+                                    cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<Permission name={self.name}>"
+
+
+class RolePermission(Base):
+    """
+    Many-to-many: role name → permission.
+    role_name is stored as a plain string matching users.role ('admin'/'operator'/…).
+    Updating rows here and bumping users.permissions_version invalidates JWT caches.
+    """
+    __tablename__ = "role_permissions"
+
+    role_name       = Column(String(50), primary_key=True)
+    permission_name = Column(String(100),
+                             ForeignKey("permissions.name", ondelete="CASCADE"),
+                             primary_key=True)
+
+    permission = relationship("Permission", back_populates="role_permissions")
+
+    __table_args__ = (
+        Index("idx_role_permissions_role", "role_name"),
+    )
+
+    def __repr__(self):
+        return f"<RolePermission role={self.role_name} perm={self.permission_name}>"
+
+
+class UserPermission(Base):
+    """
+    Per-user permission overrides on top of role-level permissions.
+    granted=True  → explicitly grant (adds to role set)
+    granted=False → explicitly deny  (removes from role set)
+    """
+    __tablename__ = "user_permissions"
+
+    user_id         = Column(UUID, ForeignKey("users.id", ondelete="CASCADE"),
+                             primary_key=True)
+    permission_name = Column(String(100),
+                             ForeignKey("permissions.name", ondelete="CASCADE"),
+                             primary_key=True)
+    granted         = Column(Boolean, nullable=False, default=True)
+
+    user       = relationship("User", back_populates="user_permissions")
+    permission = relationship("Permission", back_populates="user_permissions")
+
+    __table_args__ = (
+        Index("idx_user_permissions_user_id", "user_id"),
+    )
+
+    def __repr__(self):
+        return f"<UserPermission user={self.user_id} perm={self.permission_name} granted={self.granted}>"
 
 
 # ---------------------------------------------------------------------------

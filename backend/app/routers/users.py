@@ -6,7 +6,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies.auth import get_current_user, require_admin
+from app.dependencies.auth import (
+    bump_permissions_version,
+    get_current_user,
+    require_permission,
+)
 from app.models import User
 from app.routers.auth import pwd_context
 from app.schemas.user import UserCreate, UserRead, UserUpdate
@@ -25,7 +29,7 @@ def list_users(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_permission("users:read")),
 ):
     return db.query(User).order_by(User.created_at.desc()).offset(skip).limit(limit).all()
 
@@ -34,7 +38,7 @@ def list_users(
 def create_user(
     payload: UserCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_permission("users:write")),
 ):
     if db.query(User).filter(User.email == payload.email).first():
         raise HTTPException(
@@ -66,7 +70,7 @@ def update_user(
     user_id: str,
     payload: UserUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_permission("users:write")),
 ):
     try:
         uid = uuid.UUID(user_id)
@@ -77,10 +81,14 @@ def update_user(
         raise HTTPException(status_code=404, detail="User not found")
     data = payload.model_dump(exclude_unset=True)
     password = data.pop("password", None)
+    role_changed = "role" in data and data["role"] != user.role
     for k, v in data.items():
         setattr(user, k, v)
     if password is not None:
         user.password_hash = pwd_context.hash(password)
+    # Invalidate the permission cache when the user's role changes.
+    if role_changed:
+        bump_permissions_version(user, db)
     audit_service.log(
         db, user=current_user,
         action="user.update",

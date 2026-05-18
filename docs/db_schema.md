@@ -16,26 +16,106 @@
 
 Core user account. Supports both local (password) and OAuth login via `user_identities`.
 
+`permissions_version` is a counter incremented whenever a user's effective permissions change (role change, role-permission update, or user-level override). It is embedded in the JWT so the auth layer can detect stale permission caches without an extra DB join.
+
 ```sql
 CREATE TABLE users (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name            VARCHAR(255) NOT NULL,
-    email           VARCHAR(255) NOT NULL UNIQUE,
-    password_hash   VARCHAR(255),                        -- NULL if OAuth-only account
-    role            VARCHAR(50) NOT NULL DEFAULT 'operator', -- 'admin' | 'operator'
-    is_active       BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at      TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMP NOT NULL DEFAULT NOW()
+    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name                VARCHAR(255) NOT NULL,
+    email               VARCHAR(255) NOT NULL UNIQUE,
+    password_hash       VARCHAR(255),                        -- NULL if OAuth-only account
+    role                VARCHAR(50) NOT NULL DEFAULT 'operator',
+    is_active           BOOLEAN NOT NULL DEFAULT TRUE,
+    permissions_version INTEGER NOT NULL DEFAULT 0,          -- JWT permission cache key
+    created_at          TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX idx_users_email ON users(email);
 ```
 
-**Roles:**
-| Role | Description |
-|---|---|
-| `admin` | Full access: manage users, products, providers, finalize lists |
-| `operator` | Create and manage orders, view shopping lists and invoices |
+**Roles** are named bundles of permissions stored in `role_permissions`. The role column is just a label; what a user can do is determined entirely by that table (plus any `user_permissions` overrides).
+
+---
+
+### `permissions`
+
+Catalogue of all named capabilities in the system. Seeded at startup; not created by users.
+
+```sql
+CREATE TABLE permissions (
+    name        VARCHAR(100) PRIMARY KEY,   -- e.g. 'orders:read:all'
+    description TEXT
+);
+```
+
+Permission naming convention: `<resource>:<action>` or `<resource>:<action>:all`.
+The `:all` suffix grants cross-user data scope (see all records, not just own).
+
+---
+
+### `role_permissions`
+
+Many-to-many mapping of role names to permissions. Updating this table and calling `bump_permissions_version_for_role` invalidates JWT caches for all affected users.
+
+```sql
+CREATE TABLE role_permissions (
+    role_name       VARCHAR(50) NOT NULL,
+    permission_name VARCHAR(100) NOT NULL REFERENCES permissions(name) ON DELETE CASCADE,
+    PRIMARY KEY (role_name, permission_name)
+);
+
+CREATE INDEX idx_role_permissions_role ON role_permissions(role_name);
+```
+
+**Default seeding:**
+
+| Permission | admin | operator |
+|---|:---:|:---:|
+| `users:read` | ✓ | |
+| `users:write` | ✓ | |
+| `clients:read` | ✓ | ✓ |
+| `clients:write` | ✓ | ✓ |
+| `providers:read` | ✓ | ✓ |
+| `providers:write` | ✓ | |
+| `products:read` | ✓ | ✓ |
+| `products:write` | ✓ | |
+| `orders:read` | ✓ | ✓ |
+| `orders:read:all` | ✓ | |
+| `orders:write` | ✓ | ✓ |
+| `orders:write:all` | ✓ | |
+| `orders:parse` | ✓ | ✓ |
+| `shopping_lists:read` | ✓ | ✓ |
+| `shopping_lists:read:all` | ✓ | |
+| `shopping_lists:write` | ✓ | ✓ |
+| `shopping_lists:aggregate` | ✓ | ✓ |
+| `shopping_lists:finalize` | ✓ | ✓ |
+| `shopping_lists:reopen` | ✓ | ✓ |
+| `purchase_orders:read` | ✓ | ✓ |
+| `purchase_orders:read:all` | ✓ | |
+| `purchase_orders:write` | ✓ | ✓ |
+| `purchase_orders:write:all` | ✓ | |
+| `invoices:read` | ✓ | ✓ |
+| `invoices:write` | ✓ | ✓ |
+| `audit_logs:read` | ✓ | |
+
+---
+
+### `user_permissions`
+
+Per-user permission overrides layered on top of role defaults.
+`granted = TRUE` adds a permission the role doesn't have; `granted = FALSE` removes one it does.
+
+```sql
+CREATE TABLE user_permissions (
+    user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    permission_name VARCHAR(100) NOT NULL REFERENCES permissions(name) ON DELETE CASCADE,
+    granted         BOOLEAN NOT NULL,
+    PRIMARY KEY (user_id, permission_name)
+);
+
+CREATE INDEX idx_user_permissions_user_id ON user_permissions(user_id);
+```
 
 ---
 

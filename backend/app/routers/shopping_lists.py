@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import has_permission, require_permission
 from app.models import Invoice, Order, Product, PurchaseOrder, ShoppingList, ShoppingListItem, User
 from app.schemas.shopping_list import (
     ProviderGroup,
@@ -71,10 +71,10 @@ def _to_read(sl: ShoppingList) -> ShoppingListRead:
 def aggregate_list(
     list_date: date,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("shopping_lists:aggregate")),
 ):
-    # Operators only aggregate their own orders; admins aggregate all.
-    scope_to_owner = current_user.role == "operator"
+    # With shopping_lists:read:all, aggregate across all users' confirmed orders.
+    scope_to_owner = not has_permission(current_user, "shopping_lists:read:all")
     shopping_list_service.aggregate_orders_into_list(
         list_date, str(current_user.id), db, scope_to_owner=scope_to_owner
     )
@@ -95,7 +95,7 @@ def aggregate_list(
 def get_list(
     list_date: date,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("shopping_lists:read")),
 ):
     sl = _list_with_items(db, list_date, str(current_user.id))
     if not sl:
@@ -112,7 +112,7 @@ def adjust_item(
     item_id: str,
     payload: ShoppingListItemAdjust,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("shopping_lists:write")),
 ):
     try:
         iid = uuid.UUID(item_id)
@@ -144,7 +144,7 @@ def adjust_item(
 def finalize_list(
     list_date: date,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("shopping_lists:finalize")),
 ):
     sl = _list_with_items(db, list_date, str(current_user.id))
     if not sl:
@@ -169,8 +169,11 @@ def finalize_list(
 
     shopping_list_service.create_purchase_orders_for_list(sl, str(current_user.id), db)
 
-    # For operators: only invoice their own confirmed orders.
-    order_owner_id = str(current_user.id) if current_user.role == "operator" else None
+    # Without shopping_lists:read:all, only invoice that user's own confirmed orders.
+    order_owner_id = (
+        None if has_permission(current_user, "shopping_lists:read:all")
+        else str(current_user.id)
+    )
     invoice_service.create_invoices_for_list(
         list_date, sl.finalize_count, str(current_user.id), db,
         order_owner_id=order_owner_id,
@@ -185,7 +188,7 @@ def finalize_list(
 def reopen_list(
     list_date: date,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("shopping_lists:reopen")),
 ):
     sl = _list_with_items(db, list_date, str(current_user.id))
     if not sl:
@@ -195,13 +198,14 @@ def reopen_list(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="List is not finalized",
         )
-    # Delete purchase orders for this user's list (items cascade via DB)
     db.query(PurchaseOrder).filter(
         PurchaseOrder.shopping_list_id == sl.id
     ).delete(synchronize_session="fetch")
 
-    # Delete invoices scoped to this user's orders
-    order_owner_id = str(current_user.id) if current_user.role == "operator" else None
+    order_owner_id = (
+        None if has_permission(current_user, "shopping_lists:read:all")
+        else str(current_user.id)
+    )
     invoice_service.delete_invoices_for_date(list_date, db, order_owner_id=order_owner_id)
 
     sl.status = "open"

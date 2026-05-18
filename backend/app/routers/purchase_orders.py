@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
-from app.dependencies.auth import get_current_user, get_print_user
+from app.dependencies.auth import get_print_user, has_permission, require_permission
 from app.models import Order, OrderItem, Product, PurchaseOrder, PurchaseOrderItem, ShoppingList, User
 from app.schemas.purchase_order import (
     PurchaseOrderItemRead,
@@ -61,8 +61,8 @@ def _po_detail(db: Session, pid: uuid.UUID) -> PurchaseOrderRead:
 
 
 def _assert_po_access(db: Session, po_id: uuid.UUID, user: User) -> None:
-    """Raise 403 if an operator tries to access a PO not from their own list."""
-    if user.role == "admin":
+    """Raise 403 if the user lacks cross-user scope and the PO is not from their list."""
+    if has_permission(user, "purchase_orders:read:all"):
         return
     po = db.query(PurchaseOrder).filter(PurchaseOrder.id == po_id).first()
     if not po:
@@ -77,7 +77,7 @@ def list_purchase_orders(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("purchase_orders:read")),
 ):
     query = (
         db.query(PurchaseOrder)
@@ -89,8 +89,8 @@ def list_purchase_orders(
         .join(ShoppingList, ShoppingList.id == PurchaseOrder.shopping_list_id)
         .order_by(PurchaseOrder.created_at.desc())
     )
-    # Operators only see POs from their own shopping lists.
-    if current_user.role == "operator":
+    # Without purchase_orders:read:all, restrict to the user's own shopping lists.
+    if not has_permission(current_user, "purchase_orders:read:all"):
         query = query.filter(ShoppingList.created_by == current_user.id)
     rows = query.offset(skip).limit(limit).all()
     return [
@@ -112,7 +112,7 @@ def list_purchase_orders(
 def get_purchase_order(
     po_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("purchase_orders:read")),
 ):
     try:
         pid = uuid.UUID(po_id)
@@ -334,7 +334,7 @@ def update_purchase_order(
     po_id: str,
     payload: PurchaseOrderUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("purchase_orders:write")),
 ):
     try:
         pid = uuid.UUID(po_id)

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import require_permission
 from app.models import Provider, User
 from app.schemas.provider import ProviderCreate, ProviderRead, ProviderUpdate
 from app.services import audit_service
@@ -20,7 +20,7 @@ def list_providers(
     limit: int = 100,
     active_only: bool = False,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User = Depends(require_permission("providers:read")),
 ):
     q = db.query(Provider).order_by(Provider.name)
     if active_only:
@@ -32,7 +32,7 @@ def list_providers(
 def create_provider(
     payload: ProviderCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("providers:write")),
 ):
     row = Provider(
         name=payload.name,
@@ -59,7 +59,7 @@ def create_provider(
 def get_provider(
     provider_id: str,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User = Depends(require_permission("providers:read")),
 ):
     try:
         pid = uuid.UUID(provider_id)
@@ -76,7 +76,7 @@ def update_provider(
     provider_id: str,
     payload: ProviderUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("providers:write")),
 ):
     try:
         pid = uuid.UUID(provider_id)

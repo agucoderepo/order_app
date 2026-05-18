@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import require_permission
 from app.models import Client, User
 from app.schemas.client import ClientCreate, ClientRead, ClientUpdate
 from app.services import audit_service
@@ -20,7 +20,7 @@ def list_clients(
     limit: int = 100,
     active_only: bool = False,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User = Depends(require_permission("clients:read")),
 ):
     q = db.query(Client).order_by(Client.name)
     if active_only:
@@ -32,7 +32,7 @@ def list_clients(
 def create_client(
     payload: ClientCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("clients:write")),
 ):
     row = Client(
         name=payload.name,
@@ -58,7 +58,7 @@ def create_client(
 def get_client(
     client_id: str,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User = Depends(require_permission("clients:read")),
 ):
     try:
         cid = uuid.UUID(client_id)
@@ -75,7 +75,7 @@ def update_client(
     client_id: str,
     payload: ClientUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("clients:write")),
 ):
     try:
         cid = uuid.UUID(client_id)
