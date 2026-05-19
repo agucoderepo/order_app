@@ -38,6 +38,7 @@
     "purchase_orders": "Órdenes de compra",
     "invoices": "Facturas",
     "audit_log": "Registro de auditoría",
+    "permissions": "Permisos",
     "sign_out": "Cerrar sesión",
     "admin_panel": "Panel administrador",
     "operator_panel": "Panel operador"
@@ -75,7 +76,9 @@
     "invoices_title": "Facturas",
     "invoices_sub": "Ver y gestionar facturas de clientes",
     "audit_log_title": "Registro de auditoría",
-    "audit_log_sub": "Seguimiento de todas las acciones del sistema"
+    "audit_log_sub": "Seguimiento de todas las acciones del sistema",
+    "permissions_title": "Permisos",
+    "permissions_sub": "Gestionar permisos de roles y excepciones por usuario"
   },
   "login": {
     "system_name": "Sistema de gestión de pedidos",
@@ -399,5 +402,31 @@
     "col_entity": "Entidad",
     "col_id": "ID",
     "col_detail": "Detalle"
+  },
+  "permissions": {
+    "tab_roles": "Permisos por rol",
+    "tab_users": "Excepciones por usuario",
+    "stat_total": "Permisos totales",
+    "stat_resources": "Recursos",
+    "stat_crossuser": "Permisos entre usuarios",
+    "load_error": "Error al cargar permisos",
+    "users_load_error": "Error al cargar usuarios",
+    "role_saved": "Permisos del rol guardados",
+    "override_saved": "Excepción guardada",
+    "override_removed": "Excepción eliminada",
+    "selected": "{{count}} seleccionados",
+    "save_role": "Guardar permisos del rol",
+    "search_user": "Buscar usuario...",
+    "select_user_prompt": "Seleccioná un usuario para ver sus excepciones",
+    "no_users_found": "No se encontraron usuarios",
+    "add_override": "Agregar excepción",
+    "permission": "Permiso",
+    "select_permission": "Seleccionar permiso...",
+    "effect": "Efecto",
+    "grant": "Otorgar",
+    "deny": "Denegar",
+    "add": "Agregar",
+    "active_overrides": "Excepciones activas",
+    "no_overrides": "Sin excepciones para este usuario"
   }
 }

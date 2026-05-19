@@ -15,10 +15,11 @@ import ShoppingLists from './pages/ShoppingLists.tsx';
 import PurchaseOrders from './pages/PurchaseOrders.tsx';
 import Invoices from './pages/Invoices.tsx';
 import AuditLog from './pages/AuditLog.tsx';
+import Permissions from './pages/Permissions.tsx';
 import './styles/globals.css';
 import type { TFunction } from 'i18next';
 
-type Page = 'dashboard' | 'users' | 'clients' | 'providers' | 'products' | 'orders' | 'shopping-lists' | 'purchase-orders' | 'invoices' | 'audit-log';
+type Page = 'dashboard' | 'users' | 'clients' | 'providers' | 'products' | 'orders' | 'shopping-lists' | 'purchase-orders' | 'invoices' | 'audit-log' | 'permissions';
 
 function getPageMeta(t: TFunction): Record<Page, { title: string; sub: string }> {
   return {
@@ -32,11 +33,12 @@ function getPageMeta(t: TFunction): Record<Page, { title: string; sub: string }>
     'purchase-orders': { title: t('page_meta.purchase_orders_title'), sub: t('page_meta.purchase_orders_sub') },
     'invoices':        { title: t('page_meta.invoices_title'),        sub: t('page_meta.invoices_sub') },
     'audit-log':       { title: t('page_meta.audit_log_title'),       sub: t('page_meta.audit_log_sub') },
+    'permissions':     { title: t('page_meta.permissions_title'),     sub: t('page_meta.permissions_sub') },
   };
 }
 
 function isPage(value: string): value is Page {
-  return ['dashboard', 'users', 'clients', 'providers', 'products', 'orders', 'shopping-lists', 'purchase-orders', 'invoices', 'audit-log'].includes(value);
+  return ['dashboard', 'users', 'clients', 'providers', 'products', 'orders', 'shopping-lists', 'purchase-orders', 'invoices', 'audit-log', 'permissions'].includes(value);
 }
 
 export default function App() {
@@ -109,6 +111,7 @@ export default function App() {
             {safePage === 'purchase-orders' && <PurchaseOrders toast={toast} />}
             {safePage === 'invoices'        && <Invoices toast={toast} />}
             {safePage === 'audit-log'       && <AuditLog toast={toast} />}
+            {safePage === 'permissions'     && <Permissions toast={toast} />}
           </div>
         </div>
       </div>

@@ -14,6 +14,7 @@ const NAV: NavItem[] = [
   { id: 'purchase-orders', icon: '◻' },
   { id: 'invoices',        icon: '◫', adminOnly: true },
   { id: 'audit-log',       icon: '▦', adminOnly: true },
+  { id: 'permissions',     icon: '⬡', adminOnly: true },
 ];
 
 function navKey(id: string) {

@@ -42,6 +42,23 @@ export interface TokenResponse {
     is_active?: boolean;
   }
 
+// ─── Permissions ─────────────────────────────────────────────────────────────
+
+export interface Permission {
+  name: string;
+  description: string | null;
+}
+
+export interface RolePermissions {
+  role: string;
+  permissions: string[];
+}
+
+export interface UserPermissionOverride {
+  permission_name: string;
+  granted: boolean;
+}
+
 // ─── Clients ─────────────────────────────────────────────────────────────────
 
 export interface Client {
