@@ -427,6 +427,46 @@
     "deny": "Denegar",
     "add": "Agregar",
     "active_overrides": "Excepciones activas",
-    "no_overrides": "Sin excepciones para este usuario"
+    "no_overrides": "Sin excepciones para este usuario",
+    "cross_user": "entre usuarios"
+  },
+  "perm_resources": {
+    "users": "Usuarios",
+    "clients": "Clientes",
+    "providers": "Proveedores",
+    "products": "Productos",
+    "orders": "Pedidos",
+    "shopping_lists": "Listas de compras",
+    "purchase_orders": "Órdenes de compra",
+    "invoices": "Facturas",
+    "audit_logs": "Registro de auditoría"
+  },
+  "perm_desc": {
+    "users_read": "Listar y ver cuentas de usuario",
+    "users_write": "Crear y actualizar cuentas de usuario",
+    "clients_read": "Listar y ver clientes",
+    "clients_write": "Crear y actualizar clientes",
+    "providers_read": "Listar y ver proveedores",
+    "providers_write": "Crear y actualizar proveedores",
+    "products_read": "Listar, buscar y ver productos",
+    "products_write": "Crear y actualizar productos",
+    "orders_read": "Leer pedidos propios",
+    "orders_read_all": "Leer todos los pedidos de todos los usuarios",
+    "orders_write": "Crear y actualizar pedidos propios",
+    "orders_write_all": "Actualizar cualquier pedido sin importar el propietario",
+    "orders_parse": "Analizar mensajes de WhatsApp como borradores de pedido",
+    "shopping_lists_read": "Leer listas de compras propias",
+    "shopping_lists_read_all": "Leer todas las listas de compras de todos los usuarios",
+    "shopping_lists_write": "Ajustar ítems en listas de compras propias",
+    "shopping_lists_aggregate": "Agregar pedidos confirmados en una lista de compras",
+    "shopping_lists_finalize": "Finalizar una lista de compras (crea órdenes de compra y facturas)",
+    "shopping_lists_reopen": "Reabrir una lista de compras finalizada",
+    "purchase_orders_read": "Leer órdenes de compra propias",
+    "purchase_orders_read_all": "Leer todas las órdenes de compra de todos los usuarios",
+    "purchase_orders_write": "Actualizar el estado de órdenes de compra propias",
+    "purchase_orders_write_all": "Actualizar el estado de cualquier orden de compra",
+    "invoices_read": "Listar y ver facturas",
+    "invoices_write": "Actualizar el estado de facturas",
+    "audit_logs_read": "Ver entradas del registro de auditoría"
   }
 }

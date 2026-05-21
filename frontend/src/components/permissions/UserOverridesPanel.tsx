@@ -168,7 +168,9 @@ export default function UserOverridesPanel({ allPermissions, toast }: Props) {
                   <select value={addPerm} onChange={(e) => setAddPerm(e.target.value)}>
                     <option value="">{t('permissions.select_permission')}</option>
                     {availableToAdd.map((p) => (
-                      <option key={p.name} value={p.name}>{p.name}</option>
+                      <option key={p.name} value={p.name}>
+                        {p.name} — {t(`perm_desc.${p.name.replace(/:/g, '_')}`, { defaultValue: p.description ?? p.name })}
+                      </option>
                     ))}
                   </select>
                 </div>

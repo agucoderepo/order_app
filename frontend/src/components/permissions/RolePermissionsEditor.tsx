@@ -128,7 +128,7 @@ export default function RolePermissionsEditor({ allPermissions, toast }: Props) 
                       style={{ cursor: 'pointer', accentColor: 'var(--accent)', width: 15, height: 15 }}
                     />
                     <span style={{ fontSize: 12, fontWeight: 700, fontFamily: 'var(--mono)', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '.08em' }}>
-                      {resource.replace(/_/g, ' ')}
+                      {t(`perm_resources.${resource}`, { defaultValue: resource.replace(/_/g, ' ') })}
                     </span>
                     <span style={{ fontSize: 11, color: 'var(--muted)', marginLeft: 'auto' }}>
                       {perms.filter((p) => checked.has(p.name)).length} / {perms.length}
@@ -160,7 +160,9 @@ export default function RolePermissionsEditor({ allPermissions, toast }: Props) 
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 12, fontFamily: 'var(--mono)', color: 'var(--text)' }}>{p.name}</div>
                           {p.description && (
-                            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>{p.description}</div>
+                            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>
+                              {t(`perm_desc.${p.name.replace(/:/g, '_')}`, { defaultValue: p.description })}
+                            </div>
                           )}
                         </div>
                         {p.name.endsWith(':all') && (
@@ -169,7 +171,7 @@ export default function RolePermissionsEditor({ allPermissions, toast }: Props) 
                             background: 'rgba(200,240,74,.12)', color: 'var(--accent)',
                             fontFamily: 'var(--mono)', letterSpacing: '.05em', flexShrink: 0,
                           }}>
-                            cross-user
+                            {t('permissions.cross_user')}
                           </span>
                         )}
                       </label>
