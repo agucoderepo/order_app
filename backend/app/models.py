@@ -365,11 +365,13 @@ class Order(Base):
     source:
       'manual'    — entered via the browser item search
       'whatsapp'  — parsed from a pasted WhatsApp message
+      'telegram'  — parsed from a Telegram message
 
     status flow: draft → confirmed → delivered
 
-    raw_whatsapp_text stores the original paste for audit purposes
-    when source='whatsapp', so errors in LLM extraction can be reviewed.
+    raw_whatsapp_text stores the original source text (WhatsApp or Telegram)
+    for audit purposes when source != 'manual', so errors in LLM extraction
+    can be reviewed.
     """
     __tablename__ = "orders"
 

@@ -12,7 +12,7 @@ from  app.schemas.product import ProductSummary
 from  app.schemas.client import ClientSummary
 
 ORDER_STATUSES = {"draft", "confirmed", "delivered"}
-ORDER_SOURCES  = {"manual", "whatsapp"}
+ORDER_SOURCES  = {"manual", "whatsapp", "telegram"}
  
  
 class OrderItemBase(BaseModel):
@@ -56,8 +56,8 @@ class OrderCreate(OrderBase):
  
     @model_validator(mode="after")
     def whatsapp_requires_raw_text(self) -> "OrderCreate":
-        if self.source == "whatsapp" and not self.raw_whatsapp_text:
-            raise ValueError("raw_whatsapp_text is required when source is 'whatsapp'")
+        if self.source in ("whatsapp", "telegram") and not self.raw_whatsapp_text:
+            raise ValueError(f"raw_whatsapp_text is required when source is '{self.source}'")
         return self
  
  

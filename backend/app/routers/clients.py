@@ -8,10 +8,28 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies.auth import require_permission
 from app.models import Client, User
-from app.schemas.client import ClientCreate, ClientRead, ClientUpdate
+from app.schemas.client import ClientCreate, ClientRead, ClientSummary, ClientUpdate
 from app.services import audit_service
 
 router = APIRouter()
+
+
+@router.get("/search", response_model=list[ClientSummary])
+def search_clients(
+    q: str,
+    limit: int = 25,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("clients:read")),
+):
+    term = f"%{q.strip()}%"
+    rows = (
+        db.query(Client)
+        .filter(Client.is_active.is_(True), Client.name.ilike(term))
+        .order_by(Client.name)
+        .limit(limit)
+        .all()
+    )
+    return rows
 
 
 @router.get("/", response_model=list[ClientRead])

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import date
 from decimal import Decimal
 
 from fastapi import HTTPException, status
@@ -25,10 +26,19 @@ def list_orders(
     skip: int = 0,
     limit: int = 50,
     owner_id: uuid.UUID | None = None,
+    order_date: date | None = None,
+    status: str | None = None,
+    client_id: uuid.UUID | None = None,
 ) -> list[Order]:
     q = _orders_with_relations(db)
     if owner_id is not None:
         q = q.filter(Order.created_by == owner_id)
+    if order_date is not None:
+        q = q.filter(Order.order_date == order_date)
+    if status is not None:
+        q = q.filter(Order.status == status)
+    if client_id is not None:
+        q = q.filter(Order.client_id == client_id)
     return (
         q.order_by(Order.order_date.desc(), Order.created_at.desc())
         .offset(skip)

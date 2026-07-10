@@ -133,6 +133,7 @@
     "field_role": "Rol",
     "role_operator": "Operador — crear y gestionar pedidos",
     "role_admin": "Administrador — acceso completo",
+    "role_service": "Servicio — integración automatizada (solo acceso API)",
     "field_password": "Contraseña",
     "field_new_password": "Nueva contraseña (dejar en blanco para no cambiar)",
     "password_placeholder_min": "Mín. 8 caracteres",

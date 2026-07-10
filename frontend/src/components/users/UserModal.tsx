@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Modal from '../Modal';
 import { usersApi } from '../../api/users';
-import type { User, UserCreate, UserUpdate, ToastType } from '../../types';
+import type { User, UserCreate, UserUpdate, UserRole, ToastType } from '../../types';
 
 interface Props {
   user?: User;
@@ -19,7 +19,7 @@ export default function UserModal({ user, isSelf, onClose, onSaved, toast }: Pro
   const [form, setForm] = useState({
     name:      user?.name     ?? '',
     email:     user?.email    ?? '',
-    role:      user?.role     ?? 'operator' as 'admin' | 'operator',
+    role:      user?.role     ?? 'operator' as UserRole,
     is_active: user?.is_active ?? true,
     password:  '',
   });
@@ -99,11 +99,12 @@ export default function UserModal({ user, isSelf, onClose, onSaved, toast }: Pro
           <label>{t('users.field_role')}</label>
           <select
             value={form.role}
-            onChange={(e) => set('role', e.target.value as 'admin' | 'operator')}
+            onChange={(e) => set('role', e.target.value as UserRole)}
             disabled={isSelf}
           >
             <option value="operator">{t('users.role_operator')}</option>
             <option value="admin">{t('users.role_admin')}</option>
+            <option value="service">{t('users.role_service')}</option>
           </select>
           {isSelf && (
             <span style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--mono)', marginTop: 4 }}>

@@ -14,7 +14,7 @@ export interface TokenResponse {
   
   // ─── Users ───────────────────────────────────────────────────────────────────
   
-  export type UserRole = 'admin' | 'operator';
+  export type UserRole = 'admin' | 'operator' | 'service';
   
   export interface User {
     id: string;
@@ -182,7 +182,7 @@ export interface ProductSearchResult {
 // ─── Orders ──────────────────────────────────────────────────────────────────
 
 export type OrderStatus = 'draft' | 'confirmed' | 'delivered';
-export type OrderSource = 'manual' | 'whatsapp';
+export type OrderSource = 'manual' | 'whatsapp' | 'telegram';
 
 export interface OrderItemCreate {
   product_id: string;

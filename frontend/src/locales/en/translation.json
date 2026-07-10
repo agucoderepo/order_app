@@ -199,6 +199,7 @@
     "field_role": "Role",
     "role_operator": "Operator — create and manage orders",
     "role_admin": "Admin — full access",
+    "role_service": "Service — headless integration (API access only)",
     "field_password": "Password",
     "field_new_password": "New password (leave blank to keep current)",
     "password_placeholder_min": "Min. 8 characters",

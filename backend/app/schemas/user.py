@@ -8,6 +8,9 @@ from pydantic import BaseModel, EmailStr, Field, field_validator, model_validato
 
 from app.schemas import TimestampMixin
 
+USER_ROLES = {"admin", "operator", "service"}
+
+
 class UserBase(BaseModel):
     name: str = Field(min_length=2, max_length=255)
     email: EmailStr
@@ -22,8 +25,8 @@ class UserBase(BaseModel):
     @field_validator("role")
     @classmethod
     def validate_role(cls, v: str) -> str:
-        if v not in {"admin", "operator"}:
-            raise ValueError("role must be 'admin' or 'operator'")
+        if v not in USER_ROLES:
+            raise ValueError(f"role must be one of {USER_ROLES}")
         return v
  
  
@@ -47,8 +50,8 @@ class UserUpdate(BaseModel):
     @field_validator("role")
     @classmethod
     def validate_role(cls, v: Optional[str]) -> Optional[str]:
-        if v is not None and v not in {"admin", "operator"}:
-            raise ValueError("role must be 'admin' or 'operator'")
+        if v is not None and v not in USER_ROLES:
+            raise ValueError(f"role must be one of {USER_ROLES}")
         return v
  
  

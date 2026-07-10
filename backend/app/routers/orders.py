@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -5,7 +7,7 @@ from app.database import get_db
 from app.dependencies.auth import has_permission, require_permission
 from app.models import User
 from app.schemas.order import OrderCreate, OrderRead, OrderUpdate
-from app.services import audit_service, order_service, whatsapp_parser
+from app.services import audit_service, order_service, telegram_parser, whatsapp_parser
 
 router = APIRouter()
 
@@ -14,12 +16,32 @@ router = APIRouter()
 def list_orders(
     skip: int = 0,
     limit: int = 50,
+    order_date: date | None = None,
+    status: str | None = None,
+    client_id: str | None = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_permission("orders:read")),
 ):
     # Users with orders:read:all see every order; others see only their own.
     owner_id = None if has_permission(current_user, "orders:read:all") else current_user.id
-    return order_service.list_orders(db, skip=skip, limit=limit, owner_id=owner_id)
+    return order_service.list_orders(
+        db, skip=skip, limit=limit, owner_id=owner_id,
+        order_date=order_date, status=status, client_id=client_id,
+    )
+
+
+@router.get("/{order_id}", response_model=OrderRead)
+def get_order(
+    order_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("orders:read")),
+):
+    order = order_service.get_order_or_404(db, order_id)
+    # Without orders:read:all, users can only read orders they created.
+    if not has_permission(current_user, "orders:read:all") and \
+            str(order.created_by) != str(current_user.id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+    return order
 
 
 @router.post("/", response_model=OrderRead, status_code=status.HTTP_201_CREATED)
@@ -46,6 +68,15 @@ def parse_whatsapp(
     current_user: User = Depends(require_permission("orders:parse")),
 ):
     return whatsapp_parser.parse_whatsapp_message(body["text"], db)
+
+
+@router.post("/parse-telegram")
+def parse_telegram(
+    body: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("orders:parse")),
+):
+    return telegram_parser.parse_telegram_message(body["text"], db)
 
 
 @router.patch("/{order_id}", response_model=OrderRead)

@@ -19,7 +19,7 @@ function groupByResource(permissions: Permission[]): Record<string, Permission[]
   return groups;
 }
 
-const ROLES = ['admin', 'operator'];
+const ROLES = ['admin', 'operator', 'service'];
 
 export default function RolePermissionsEditor({ allPermissions, toast }: Props) {
   const { t } = useTranslation();

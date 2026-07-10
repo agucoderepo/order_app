@@ -62,4 +62,14 @@ ROLE_PERMISSIONS: dict[str, list[str]] = {
         "invoices:read",
         "invoices:write",
     ],
+    # Headless integrations (e.g. the MCP server used by AI order-drafting
+    # agents) — only enough to search products/clients and create/read/update
+    # its own draft orders. No read-all/write-all, no shopping_lists/
+    # purchase_orders/invoices access.
+    "service": [
+        "products:read",
+        "clients:read",
+        "orders:read",
+        "orders:write",
+    ],
 }
